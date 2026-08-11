@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AniNoti — Support</title>
+<link rel="stylesheet" href="aninoti.css">
+</head>
+<body>
+<main>
+
+<h1>AniNoti</h1>
+<p class="lede">Follow anime, see what is airing this week or this month, and get a reminder the
+moment a new episode lands.</p>
+
+<h2>Support</h2>
+<p>Something broken, something missing, or a question this page does not answer — email
+<a href="mailto:support@aninoti.app">support@aninoti.app</a>. Include the app version from
+<em>Settings → About</em> and what you were doing when it went wrong; that is usually enough to
+find it.</p>
+
+<h2>Common questions</h2>
+
+<h3>A reminder did not arrive</h3>
+<p>Three things account for almost all of these, in order of likelihood:</p>
+<ul>
+  <li><strong>Notification permission is off.</strong> AniNoti shows a banner when this is the case.
+  Turn it back on in your device settings, under Notifications for AniNoti.</li>
+  <li><strong>Quiet hours held it.</strong> A reminder that falls inside your quiet hours is held
+  until they end rather than dropped. Check <em>Settings → Quiet hours</em>.</li>
+  <li><strong>Battery optimisation.</strong> Some Android manufacturers stop background work
+  aggressively. Excluding AniNoti from battery optimisation in your device settings fixes it.</li>
+</ul>
+
+<h3>The schedule looks out of date</h3>
+<p>Airing times come from AniList, and a series that has not been updated there will not be updated
+in AniNoti. If the app cannot reach AniList it shows the last schedule it downloaded, with a banner
+saying how old it is, rather than an error.</p>
+
+<h3>An episode is missing, or a time is wrong</h3>
+<p>AniNoti does not hold its own catalogue — every title, time and description comes from
+<a href="https://anilist.co">AniList</a>. Corrections made there flow into the app. If something is
+wrong in AniNoti but right on AniList, that is a bug worth emailing us about.</p>
+
+<h3>The ads, and how to change what they use</h3>
+<p>AniNoti is free, and the slots marked <em>Sponsored</em> between the rows of the Airing,
+Following, Search and Alerts lists are how it pays for itself. A list carries at most three, never
+in its first six rows, and there are no full-screen ads at all.</p>
+<p>Nothing you do in the app is used to choose them — not what you follow, not what you search for.
+In the UK and the EEA you are asked for consent before the first ad is requested, and
+<em>Settings → About → Ad privacy options</em> reopens that form whenever you want to change your
+answer. Elsewhere, your device's own controls apply: <em>Settings → Privacy &amp; Security →
+Tracking</em> on iOS, <em>Settings → Google → Ads</em> on Android.</p>
+
+<h3>Reporting a review or other content</h3>
+<p>Reviews are written by AniList users and shown in the app unedited. To report one, use the
+<strong>Report</strong> action on the review itself, or email
+<a href="mailto:support@aninoti.app">support@aninoti.app</a> with the series and reviewer name.
+Reports are reviewed within one business day, and anything found to breach our content rules is
+hidden from the app.</p>
+
+<h2>Privacy</h2>
+<p>No accounts and no sign-in. What you follow, and what you search for, stays on your device — it
+is never sent to us. AniNoti is free and carries ads, which is the one place data leaves the app:
+the <a href="privacy-policy.html">privacy policy</a> sets out what Google's ad system receives, what
+the Android build collects for crash reporting, and why the iOS build collects nothing of its
+own.</p>
+
+<h2 id="open-source">Open source</h2>
+<p>AniNoti is built on work other people gave away. The libraries below are used under their own
+licences, which require this attribution and are reproduced at the linked projects.</p>
+
+<table>
+  <tr><th>Project</th><th>Licence</th></tr>
+  <tr><td><a href="https://github.com/JetBrains/compose-multiplatform">Compose Multiplatform</a> and <a href="https://developer.android.com/jetpack/androidx">AndroidX</a>, including Compose, Lifecycle, Navigation 3, WorkManager, Profile Installer, Room and SQLite</td><td>Apache-2.0</td></tr>
+  <tr><td><a href="https://kotlinlang.org">Kotlin</a>, kotlinx.coroutines, kotlinx.serialization and kotlinx-datetime</td><td>Apache-2.0</td></tr>
+  <tr><td><a href="https://ktor.io">Ktor</a> and <a href="https://square.github.io/okhttp/">OkHttp</a></td><td>Apache-2.0</td></tr>
+  <tr><td><a href="https://insert-koin.io">Koin</a></td><td>Apache-2.0</td></tr>
+  <tr><td><a href="https://coil-kt.github.io/coil/">Coil</a></td><td>Apache-2.0</td></tr>
+  <tr><td><a href="https://arrow-kt.io">Arrow</a></td><td>Apache-2.0</td></tr>
+  <tr><td><a href="https://kermit.touchlab.co">Kermit</a></td><td>Apache-2.0</td></tr>
+  <tr><td><a href="https://github.com/PierfrancescoSoffritti/android-youtube-player">android-youtube-player</a></td><td>MIT</td></tr>
+  <tr><td><a href="https://firebase.google.com">Firebase SDK for Android</a> (Android build only)</td><td>Apache-2.0</td></tr>
+</table>
+
+<p>Anime data is provided by the <a href="https://anilist.co">AniList</a> API under
+<a href="https://anilist.co/terms">their terms of use</a>. Titles, artwork, synopses and reviews
+remain the property of their respective owners and are shown as AniList serves them.</p>
+
+<footer>
+  <p>AniNoti is an independent app. It is not affiliated with, endorsed by, or sponsored by AniList,
+  YouTube, Dailymotion, or any streaming service, studio or publisher. Anime titles, artwork and
+  descriptions are the property of their respective owners.</p>
+</footer>
+
+</main>
+</body>
+</html>

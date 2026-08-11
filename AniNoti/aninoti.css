@@ -1,0 +1,73 @@
+/* Direction B, the same token values as composeApp/.../theme/AppColors.kt and Theme.kt.
+   Shared by every page under docs/ so the support site and the app read as one thing. */
+:root {
+  --background: #0D0B14;
+  --surface: #141218;
+  --primary: #B69CFF;
+  --heading: #F4F2FA;
+  --body: #B4AFC6;
+  --muted: #7E7994;
+  --outline: rgba(255, 255, 255, 0.10);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 48px 20px 96px;
+  background: var(--background);
+  color: var(--body);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.65;
+}
+
+main { max-width: 720px; margin: 0 auto; }
+
+h1 {
+  color: var(--heading);
+  font-size: 32px;
+  line-height: 1.15;
+  margin: 0 0 4px;
+  font-weight: 800;
+}
+
+h2 {
+  color: var(--primary);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin: 40px 0 10px;
+}
+
+h3 { color: var(--heading); font-size: 17px; margin: 26px 0 6px; font-weight: 700; }
+
+p, li { margin: 0 0 12px; }
+ul { padding-left: 20px; }
+a { color: var(--primary); }
+strong { color: var(--heading); font-weight: 600; }
+
+.updated { color: var(--muted); font-size: 14px; margin-bottom: 40px; }
+
+table { border-collapse: collapse; width: 100%; margin: 8px 0 20px; font-size: 15px; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--outline); vertical-align: top; }
+th { color: var(--heading); font-weight: 600; }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--outline);
+  border-radius: 16px;
+  padding: 18px 20px;
+  margin: 20px 0;
+}
+.card p:last-child { margin-bottom: 0; }
+
+.lede { font-size: 18px; color: var(--heading); margin-bottom: 32px; }
+
+footer {
+  margin-top: 56px;
+  padding-top: 20px;
+  border-top: 1px solid var(--outline);
+  font-size: 14px;
+}
