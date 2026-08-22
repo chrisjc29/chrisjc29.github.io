@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nolvo — Volvo car controls on your watch</title>
+<style>
+  :root { --ink: #1a1a1a; --muted: #666; --bg: #fafafa; --accent: #2a5cff; }
+  @media (prefers-color-scheme: dark) {
+    :root { --ink: #ececec; --muted: #9a9a9a; --bg: #111; --accent: #7c9bff; }
+  }
+  * { margin: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--ink); background: var(--bg);
+    line-height: 1.6; padding: 4rem 1.5rem;
+  }
+  main { max-width: 38rem; margin: 0 auto; }
+  h1 { font-size: 2.4rem; letter-spacing: -0.02em; }
+  .tagline { color: var(--muted); font-size: 1.15rem; margin: 0.75rem 0 2rem; }
+  p { margin-bottom: 1rem; }
+  a { color: var(--accent); }
+  .disclaimer {
+    margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid rgba(128,128,128,.3);
+    color: var(--muted); font-size: 0.9rem;
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>Nolvo</h1>
+  <p class="tagline">Your Volvo, on your wrist.</p>
+  <p>Nolvo is a companion app for Wear OS smartwatches. Check whether your car is
+  locked, see fuel and battery levels, and send lock, unlock and climate commands —
+  straight from your watch, without reaching for your phone.</p>
+  <p>Nolvo connects to your car through the official
+  <a href="https://developer.volvocars.com">Volvo Cars APIs</a>, with your explicit
+  consent via your Volvo ID. It reads your car's data only when you ask it to, shows
+  it only to you, and stores nothing off your device.</p>
+  <p><a href="terms/">Terms &amp; Conditions</a></p>
+  <p class="disclaimer">Nolvo is an independent app and is not affiliated with,
+  endorsed by, or sponsored by Volvo Cars. Volvo is a trademark of Volvo Trademark
+  Holding AB.</p>
+</main>
+</body>
+</html>
