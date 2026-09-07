@@ -1,0 +1,16 @@
+/* The canvas is the whole page: no margins, no scrollbars. The ground matches AppColors — paper
+   by day, dark ink at night — so the beat before the first frame is the app's colour, not white. */
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #FAF7F2;
+}
+
+@media (prefers-color-scheme: dark) {
+    html, body {
+        background: #191512;
+    }
+}

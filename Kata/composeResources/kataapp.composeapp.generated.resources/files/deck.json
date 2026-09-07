@@ -1,0 +1,2005 @@
+{
+  "types": "data class Book(\n    val id: Int, val title: String, val author: String,\n    val year: Int, val score: Int?, val genres: List<String>\n)\n\ndata class Reading(val bookId: Int, val chapter: Int, val minutes: Int)",
+  "fields": [
+    {
+      "name": "id",
+      "type": "Int",
+      "owner": "Book"
+    },
+    {
+      "name": "title",
+      "type": "String",
+      "owner": "Book"
+    },
+    {
+      "name": "author",
+      "type": "String",
+      "owner": "Book"
+    },
+    {
+      "name": "year",
+      "type": "Int",
+      "owner": "Book"
+    },
+    {
+      "name": "score",
+      "type": "Int?",
+      "owner": "Book"
+    },
+    {
+      "name": "genres",
+      "type": "List<String>",
+      "owner": "Book"
+    },
+    {
+      "name": "bookId",
+      "type": "Int",
+      "owner": "Reading"
+    },
+    {
+      "name": "chapter",
+      "type": "Int",
+      "owner": "Reading"
+    },
+    {
+      "name": "minutes",
+      "type": "Int",
+      "owner": "Reading"
+    }
+  ],
+  "collections": [
+    {
+      "name": "library",
+      "element": "Book"
+    },
+    {
+      "name": "readings",
+      "element": "Reading"
+    }
+  ],
+  "books": [
+    {
+      "id": 1,
+      "title": "Atlas",
+      "author": "Marlowe",
+      "year": 2019,
+      "score": 8,
+      "genres": [
+        "Thriller",
+        "Sci-Fi"
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Borealis",
+      "author": "Okafor",
+      "year": 2021,
+      "genres": [
+        "Memoir"
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Cartographers",
+      "author": "Marlowe",
+      "year": 2018,
+      "score": 9,
+      "genres": [
+        "Thriller",
+        "Adventure"
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Driftwood",
+      "author": "Voss",
+      "year": 2020,
+      "score": 7,
+      "genres": [
+        "Thriller",
+        "Comedy"
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Embers",
+      "author": "Marlowe",
+      "year": 2021,
+      "genres": [
+        "Mystery"
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Foxfire",
+      "author": "Voss",
+      "year": 2023,
+      "score": 9,
+      "genres": [
+        "Fantasy",
+        "Drama"
+      ]
+    }
+  ],
+  "readings": [
+    {
+      "bookId": 1,
+      "chapter": 1,
+      "minutes": 24
+    },
+    {
+      "bookId": 1,
+      "chapter": 2,
+      "minutes": 22
+    },
+    {
+      "bookId": 3,
+      "chapter": 1,
+      "minutes": 25
+    },
+    {
+      "bookId": 4,
+      "chapter": 1,
+      "minutes": 23
+    },
+    {
+      "bookId": 4,
+      "chapter": 2,
+      "minutes": 20
+    },
+    {
+      "bookId": 6,
+      "chapter": 1,
+      "minutes": 26
+    },
+    {
+      "bookId": 6,
+      "chapter": 2,
+      "minutes": 24
+    },
+    {
+      "bookId": 6,
+      "chapter": 3,
+      "minutes": 28
+    }
+  ],
+  "operators": [
+    {
+      "name": "fold",
+      "signature": "(R, (R, T) -> R) -> R",
+      "blurb": "seeded accumulate; empty returns the seed"
+    },
+    {
+      "name": "reduce",
+      "signature": "((T, T) -> T) -> T",
+      "blurb": "self-seeding accumulate; throws on empty"
+    },
+    {
+      "name": "runningFold",
+      "signature": "(R, (R, T) -> R) -> List<R>",
+      "blurb": "fold emitting every step (alias: scan)"
+    },
+    {
+      "name": "map",
+      "signature": "((T) -> R) -> List<R>",
+      "blurb": "one out per one in"
+    },
+    {
+      "name": "mapNotNull",
+      "signature": "((T) -> R?) -> List<R>",
+      "blurb": "map, dropping nulls, narrowing the type"
+    },
+    {
+      "name": "flatMap",
+      "signature": "((T) -> Iterable<R>) -> List<R>",
+      "blurb": "map then flatten one level"
+    },
+    {
+      "name": "flatten",
+      "signature": "() -> List<T>",
+      "blurb": "collapse existing nesting one level"
+    },
+    {
+      "name": "filter",
+      "signature": "((T) -> Boolean) -> List<T>",
+      "blurb": "keep matches, discard the rest"
+    },
+    {
+      "name": "partition",
+      "signature": "((T) -> Boolean) -> Pair<List<T>, List<T>>",
+      "blurb": "filter keeping both halves"
+    },
+    {
+      "name": "associate",
+      "signature": "((T) -> Pair<K, V>) -> Map<K, V>",
+      "blurb": "both sides from a Pair"
+    },
+    {
+      "name": "associateBy",
+      "signature": "((T) -> K) -> Map<K, T>",
+      "blurb": "element becomes the value"
+    },
+    {
+      "name": "associateWith",
+      "signature": "((T) -> V) -> Map<T, V>",
+      "blurb": "element becomes the key"
+    },
+    {
+      "name": "groupBy",
+      "signature": "((T) -> K) -> Map<K, List<T>>",
+      "blurb": "collisions collect into lists"
+    },
+    {
+      "name": "groupingBy",
+      "signature": "((T) -> K) -> Grouping<T, K>",
+      "blurb": "lazy handle; pair with eachCount/fold"
+    },
+    {
+      "name": "eachCount",
+      "signature": "() -> Map<K, Int>",
+      "blurb": "count per group, one pass"
+    },
+    {
+      "name": "mapValues",
+      "signature": "((Map.Entry<K, V>) -> R) -> Map<K, R>",
+      "blurb": "same keys, new values"
+    },
+    {
+      "name": "mapKeys",
+      "signature": "((Map.Entry<K, V>) -> R) -> Map<R, V>",
+      "blurb": "same values, new keys"
+    },
+    {
+      "name": "zipWithNext",
+      "signature": "((T, T) -> R) -> List<R>",
+      "blurb": "each element with its successor; n-1"
+    },
+    {
+      "name": "windowed",
+      "signature": "(Int, Int, Boolean) -> List<List<T>>",
+      "blurb": "sliding groups; drops partials"
+    },
+    {
+      "name": "chunked",
+      "signature": "(Int) -> List<List<T>>",
+      "blurb": "non-overlapping pages; keeps the short tail"
+    },
+    {
+      "name": "distinct",
+      "signature": "() -> List<T>",
+      "blurb": "dedupe by equals/hashCode"
+    },
+    {
+      "name": "distinctBy",
+      "signature": "((T) -> K) -> List<T>",
+      "blurb": "dedupe by derived key, first wins"
+    },
+    {
+      "name": "sortedBy",
+      "signature": "((T) -> R) -> List<T>",
+      "blurb": "single-key sort, ascending"
+    },
+    {
+      "name": "sortedWith",
+      "signature": "(Comparator<T>) -> List<T>",
+      "blurb": "multi-key sort via Comparator"
+    },
+    {
+      "name": "maxByOrNull",
+      "signature": "((T) -> R) -> T?",
+      "blurb": "the element/entry, not the value"
+    },
+    {
+      "name": "minByOrNull",
+      "signature": "((T) -> R) -> T?",
+      "blurb": "mirror of maxByOrNull"
+    },
+    {
+      "name": "sumOf",
+      "signature": "((T) -> Int) -> Int",
+      "blurb": "inline sum; overload picked by return type"
+    },
+    {
+      "name": "count",
+      "signature": "((T) -> Boolean) -> Int",
+      "blurb": "size of the matching subset"
+    },
+    {
+      "name": "any",
+      "signature": "((T) -> Boolean) -> Boolean",
+      "blurb": "short-circuits on first true"
+    },
+    {
+      "name": "all",
+      "signature": "((T) -> Boolean) -> Boolean",
+      "blurb": "true on an empty list"
+    },
+    {
+      "name": "none",
+      "signature": "((T) -> Boolean) -> Boolean",
+      "blurb": "true on an empty list"
+    },
+    {
+      "name": "first",
+      "signature": "() -> T",
+      "blurb": "throws when nothing matches"
+    },
+    {
+      "name": "firstOrNull",
+      "signature": "() -> T?",
+      "blurb": "null when nothing matches"
+    },
+    {
+      "name": "asSequence",
+      "signature": "() -> Sequence<T>",
+      "blurb": "lazy, per-element, no intermediates"
+    },
+    {
+      "name": "average",
+      "signature": "() -> Double",
+      "blurb": "NaN on an empty list"
+    },
+    {
+      "name": "take",
+      "signature": "(Int) -> List<T>",
+      "blurb": "prefix, no error if shorter"
+    },
+    {
+      "name": "drop",
+      "signature": "(Int) -> List<T>",
+      "blurb": "skip a prefix"
+    }
+  ],
+  "cards": [
+    {
+      "id": "fold",
+      "operator": "fold",
+      "from": "List<Reading>",
+      "to": "Int",
+      "prompt": "Total minutes read. Use fold, not sumOf.",
+      "hint": "You need a running total that starts somewhere. What type is the accumulator?",
+      "starter": "readings.",
+      "answer": "readings.fold(0) { acc, w -> acc + w.minutes }",
+      "output": "192",
+      "steps": [
+        "Seed first: the total is an Int, so start at 0. That seed fixes R = Int.",
+        "The step lambda gets (acc, w) — the accumulator so far and the current Reading.",
+        "Return acc + w.minutes. Because R came from the seed, an empty list gives 0 rather than throwing."
+      ],
+      "why": "fold takes a seed of type R and a (R, T) -> R step, so the accumulator can be a different type from the element.",
+      "anotherTake": {
+        "prompt": "The longest single session, via fold — the accumulator doesn't have to be a sum.",
+        "answer": "readings.fold(0) { acc, w -> maxOf(acc, w.minutes) }",
+        "output": "28",
+        "from": "List<Reading>",
+        "to": "Int",
+        "starter": "readings."
+      }
+    },
+    {
+      "id": "reduce",
+      "operator": "reduce",
+      "from": "List<Book>",
+      "to": "String",
+      "prompt": "The longest title in the library, via reduce.",
+      "hint": "reduce compares like with like. What do you need to map to first?",
+      "starter": "library.",
+      "answer": "library.map { it.title }\n    .reduce { a, b -> if (b.length > a.length) b else a }",
+      "output": "Cartographers",
+      "steps": [
+        "reduce is (T, T) -> T — both sides are the same type, so map to titles first.",
+        "The lambda carries the winner forward: return whichever of a and b is longer.",
+        "There's no seed, so the first title starts it off — and an empty library would throw UnsupportedOperationException right here."
+      ],
+      "why": "reduce seeds itself with the first element. Use reduceOrNull or fold whenever empty is possible.",
+      "anotherTake": {
+        "prompt": "Total minutes via reduce — the elements are already the type the answer needs.",
+        "answer": "readings.map { it.minutes }.reduce { a, b -> a + b }",
+        "output": "192",
+        "from": "List<Reading>",
+        "to": "Int",
+        "starter": "readings."
+      }
+    },
+    {
+      "id": "flatMap",
+      "operator": "flatMap",
+      "from": "List<Book>",
+      "to": "List<String>",
+      "prompt": "Every genre in the library, no duplicates.",
+      "hint": "Each book holds a list. What does plain map give you?",
+      "starter": "library.",
+      "answer": "library.flatMap { it.genres }.distinct()",
+      "output": "[Thriller, Sci-Fi, Memoir, Adventure, Comedy, Mystery, Fantasy, Drama]   // 8",
+      "steps": [
+        "map { it.genres } would give List<List<String>> — one level too deep.",
+        "flatMap concatenates each returned list into a single flat list as it goes.",
+        "distinct() removes repeats and keeps first-seen order, so Thriller stays at index 0."
+      ],
+      "why": "flatMap is map plus a flatten of one level, done in a single pass.",
+      "anotherTake": {
+        "prompt": "Every genre on the books scored 9 or better.",
+        "answer": "library.filter { (it.score ?: 0) >= 9 }.flatMap { it.genres }",
+        "output": "[Thriller, Adventure, Fantasy, Drama]",
+        "from": "List<Book>",
+        "to": "List<String>",
+        "starter": "library."
+      }
+    },
+    {
+      "id": "flatten",
+      "operator": "flatten",
+      "from": "List<List<String>>",
+      "to": "List<String>",
+      "prompt": "Given val perBook = library.map { it.genres } — flatten it, duplicates and all.",
+      "hint": "The mapping already happened. What's left to do?",
+      "starter": "perBook.",
+      "answer": "perBook.flatten()",
+      "output": "[Thriller, Sci-Fi, Memoir, Thriller, Adventure, Thriller, Comedy, Mystery, Fantasy, Drama]   // 10",
+      "steps": [
+        "perBook is already List<List<String>> — there's nothing left to transform.",
+        "flatten() concatenates one level, preserving order.",
+        "No dedupe happens, so Thriller appears three times."
+      ],
+      "why": "Reach for flatten when the nesting already exists; flatMap when you're creating it.",
+      "anotherTake": {
+        "prompt": "Given val byDecade = library.groupBy { it.year / 10 * 10 }.values.toList() — one list again.",
+        "answer": "byDecade.flatten()",
+        "output": "[Atlas, Cartographers, Borealis, Driftwood, Embers, Foxfire]   // the 2010s first, then the 2020s",
+        "from": "List<List<Book>>",
+        "to": "List<Book>",
+        "starter": "byDecade."
+      }
+    },
+    {
+      "id": "associateBy",
+      "operator": "associateBy",
+      "from": "List<Book>",
+      "to": "Map<Int, Book>",
+      "prompt": "Index the library by id for O(1) lookup.",
+      "hint": "Look at the value side of the target type. What sits there?",
+      "starter": "library.",
+      "answer": "library.associateBy { it.id }",
+      "output": "{1=Atlas, 2=Borealis, 3=Cartographers, 4=Driftwood, 5=Embers, 6=Foxfire}   // the values are the Book objects themselves",
+      "steps": [
+        "The value side is Book — the element itself — which points at associateBy.",
+        "The lambda supplies only the key: it.id.",
+        "Ids are unique here. If they weren't, later entries would silently overwrite earlier ones."
+      ],
+      "why": "associateBy picks the key and keeps the element as the value. Duplicates overwrite, last one wins.",
+      "anotherTake": {
+        "prompt": "Index the readings by book id — and watch later chapters overwrite earlier ones.",
+        "answer": "readings.associateBy { it.bookId }",
+        "output": "{1=book 1 · ch 2 · 22 min, 3=book 3 · ch 1 · 25 min, 4=book 4 · ch 2 · 20 min, 6=book 6 · ch 3 · 28 min}   // last one in wins",
+        "from": "List<Reading>",
+        "to": "Map<Int, Reading>",
+        "starter": "readings."
+      }
+    },
+    {
+      "id": "associateWith",
+      "operator": "associateWith",
+      "from": "List<Book>",
+      "to": "Map<Book, Int>",
+      "prompt": "Each book mapped to its total minutes read. Unread ones count 0.",
+      "hint": "This time the element is on the key side. Which of the associate family is that?",
+      "starter": "library.",
+      "answer": "library.associateWith { a ->\n    readings.filter { it.bookId == a.id }.sumOf { it.minutes }\n}",
+      "output": "{Atlas=46, Borealis=0, Cartographers=25, Driftwood=43, Embers=0, Foxfire=78}",
+      "steps": [
+        "Key side is Book, so associateWith — the exact mirror of associateBy.",
+        "The lambda receives the book; filter readings down to the ones with a matching id.",
+        "sumOf over no matches returns 0, which is why Borealis and Embers still get entries."
+      ],
+      "why": "associateWith keeps the element as the key and computes the value.",
+      "anotherTake": {
+        "prompt": "Each book mapped to how many genres it carries.",
+        "answer": "library.associateWith { it.genres.size }",
+        "output": "{Atlas=2, Borealis=1, Cartographers=2, Driftwood=2, Embers=1, Foxfire=2}",
+        "from": "List<Book>",
+        "to": "Map<Book, Int>",
+        "starter": "library."
+      }
+    },
+    {
+      "id": "associate",
+      "operator": "associate",
+      "from": "List<Book>",
+      "to": "Map<String, Int>",
+      "prompt": "Title to publication year.",
+      "hint": "Neither side of the map is the Book itself.",
+      "starter": "library.",
+      "answer": "library.associate { it.title to it.year }",
+      "output": "{Atlas=2019, Borealis=2021, Cartographers=2018, Driftwood=2020, Embers=2021, Foxfire=2023}",
+      "steps": [
+        "Key is String, value is Int — the element appears on neither side, so associateBy and associateWith are both out.",
+        "associate wants a Pair; the infix `to` builds it.",
+        "It allocates one Pair per element, which is why it's the last resort of the three."
+      ],
+      "why": "associate builds both sides. Prefer associateBy or associateWith when one side is the element.",
+      "anotherTake": {
+        "prompt": "Book id to score — the nulls survive as values.",
+        "answer": "library.associate { it.id to it.score }",
+        "output": "{1=8, 2=null, 3=9, 4=7, 5=null, 6=9}",
+        "from": "List<Book>",
+        "to": "Map<Int, Int?>",
+        "starter": "library."
+      }
+    },
+    {
+      "id": "groupBy",
+      "operator": "groupBy",
+      "from": "List<Book>",
+      "to": "Map<String, List<Book>>",
+      "prompt": "The library grouped by author.",
+      "hint": "The value side is a List. What does that tell you about key collisions?",
+      "starter": "library.",
+      "answer": "library.groupBy { it.author }",
+      "output": "{Marlowe=[Atlas, Cartographers, Embers], Okafor=[Borealis], Voss=[Driftwood, Foxfire]}",
+      "steps": [
+        "A List on the value side means collisions are wanted, not avoided — that rules out associateBy.",
+        "The key selector is it.author.",
+        "Both the keys and the members inside each list keep encounter order."
+      ],
+      "why": "groupBy and associateBy have near-identical call sites and opposite collision behaviour. The value type is the tell.",
+      "anotherTake": {
+        "prompt": "The readings grouped by book id.",
+        "answer": "readings.groupBy { it.bookId }",
+        "output": "{1=[book 1 · ch 1 · 24 min, book 1 · ch 2 · 22 min], 3=[book 3 · ch 1 · 25 min], 4=[book 4 · ch 1 · 23 min, book 4 · ch 2 · 20 min], 6=[book 6 · ch 1 · 26 min, book 6 · ch 2 · 24 min, book 6 · ch 3 · 28 min]}",
+        "from": "List<Reading>",
+        "to": "Map<Int, List<Reading>>",
+        "starter": "readings."
+      }
+    },
+    {
+      "id": "groupingBy",
+      "operator": "groupingBy",
+      "from": "List<Book>",
+      "to": "Map<String, Int>",
+      "prompt": "How many books per author — without materialising the lists.",
+      "hint": "groupBy would build three lists you immediately throw away.",
+      "starter": "library.",
+      "answer": "library.groupingBy { it.author }.eachCount()",
+      "output": "{Marlowe=3, Okafor=1, Voss=2}",
+      "steps": [
+        "groupBy { it.author }.mapValues { it.value.size } works but allocates every list first.",
+        "groupingBy returns a lazy Grouping — not a Map, and nothing has run yet.",
+        "eachCount() consumes it in a single pass. fold and reduce are the other consumers."
+      ],
+      "why": "Grouping is the lazy counterpart to groupBy, for when you only need an aggregate per key.",
+      "anotherTake": {
+        "prompt": "Readings per book id, without materialising the lists.",
+        "answer": "readings.groupingBy { it.bookId }.eachCount()",
+        "output": "{1=2, 3=1, 4=2, 6=3}",
+        "from": "List<Reading>",
+        "to": "Map<Int, Int>",
+        "starter": "readings."
+      }
+    },
+    {
+      "id": "mapValues",
+      "operator": "mapValues",
+      "from": "List<Book>",
+      "to": "Map<String, List<String>>",
+      "prompt": "Author to the titles they wrote.",
+      "hint": "Group first, then reshape only the values.",
+      "starter": "library.",
+      "answer": "library.groupBy { it.author }\n    .mapValues { (_, books) -> books.map { it.title } }",
+      "output": "{Marlowe=[Atlas, Cartographers, Embers], Okafor=[Borealis], Voss=[Driftwood, Foxfire]}",
+      "steps": [
+        "groupBy gets you Map<String, List<Book>>.",
+        "mapValues rebuilds the map with keys untouched.",
+        "The lambda receives a Map.Entry, so destructure (_, books) — otherwise you're writing it.value everywhere."
+      ],
+      "why": "mapValues and mapKeys each hold one side fixed. The Entry parameter is the thing people forget.",
+      "anotherTake": {
+        "prompt": "Each author's best score — the unrated group turns into a null.",
+        "answer": "library.groupBy { it.author }\n    .mapValues { (_, books) -> books.mapNotNull { it.score }.maxOrNull() }",
+        "output": "{Marlowe=9, Okafor=null, Voss=9}",
+        "from": "List<Book>",
+        "to": "Map<String, Int?>",
+        "starter": "library."
+      }
+    },
+    {
+      "id": "mapNotNull",
+      "operator": "mapNotNull",
+      "from": "List<Book>",
+      "to": "Double",
+      "prompt": "Average score across the books that have one.",
+      "hint": "score is Int?. What does plain map give you, and will average() accept it?",
+      "starter": "library.",
+      "answer": "library.mapNotNull { it.score }.average()",
+      "output": "8.25            // from [8, 9, 7, 9] — the two nulls are gone, not zeroed",
+      "steps": [
+        "map { it.score } gives List<Int?>, and average() won't take a nullable element type.",
+        "mapNotNull drops the nulls and narrows to List<Int> in one step — no filterNotNull, no !!.",
+        "average() over [8, 9, 7, 9] is 8.25. Treating the nulls as 0 would have given 5.5, which is the bug this avoids."
+      ],
+      "why": "mapNotNull is the idiomatic way to transform and drop absent values together.",
+      "anotherTake": {
+        "prompt": "Each book's second genre, where there is one.",
+        "answer": "library.mapNotNull { it.genres.getOrNull(1) }",
+        "output": "[Sci-Fi, Adventure, Comedy, Drama]   // four books carry a second tag",
+        "from": "List<Book>",
+        "to": "List<String>",
+        "starter": "library."
+      }
+    },
+    {
+      "id": "partition",
+      "operator": "partition",
+      "from": "List<Book>",
+      "to": "Pair<List<Book>, List<Book>>",
+      "prompt": "Split into rated and unrated, keeping both halves.",
+      "hint": "filter throws the other side away. You need both.",
+      "starter": "library.",
+      "answer": "val (rated, unrated) = library.partition { it.score != null }",
+      "output": "rated   = [Atlas, Cartographers, Driftwood, Foxfire]\nunrated = [Borealis, Embers]",
+      "steps": [
+        "A Pair of lists in the target type rules out filter.",
+        "partition runs the predicate once per element and routes each to one side.",
+        "Matches go first in the Pair. Destructure at the val to name both halves."
+      ],
+      "why": "partition is filter and filterNot in a single pass, returned as a destructurable Pair.",
+      "anotherTake": {
+        "prompt": "Split the library at 2020 — this decade and everything before it.",
+        "answer": "val (recent, older) = library.partition { it.year >= 2020 }",
+        "output": "recent = [Borealis, Driftwood, Embers, Foxfire]\nolder  = [Atlas, Cartographers]",
+        "from": "List<Book>",
+        "to": "Pair<List<Book>, List<Book>>",
+        "starter": "library."
+      }
+    },
+    {
+      "id": "runningFold",
+      "operator": "runningFold",
+      "from": "List<Reading>",
+      "to": "List<Int>",
+      "prompt": "Cumulative minutes after each reading.",
+      "hint": "Same seed and same step as the total — but you want to see the working.",
+      "starter": "readings.",
+      "answer": "readings.runningFold(0) { acc, w -> acc + w.minutes }",
+      "output": "[0, 24, 46, 71, 94, 114, 140, 164, 192]   // 9 elements from 8 readings",
+      "steps": [
+        "Identical seed and step lambda to fold.",
+        "runningFold emits the accumulator after every element instead of only at the end.",
+        "The seed is included, so 8 readings produce 9 values. scan is the same function under another name."
+      ],
+      "why": "runningFold is fold that keeps its intermediate results. runningReduce is the reduce equivalent.",
+      "anotherTake": {
+        "prompt": "The longest session seen so far, after each reading.",
+        "answer": "readings.runningFold(0) { acc, w -> maxOf(acc, w.minutes) }",
+        "output": "[0, 24, 24, 25, 25, 25, 26, 26, 28]",
+        "from": "List<Reading>",
+        "to": "List<Int>",
+        "starter": "readings."
+      }
+    },
+    {
+      "id": "zipWithNext",
+      "operator": "zipWithNext",
+      "from": "List<Reading>",
+      "to": "List<Int>",
+      "prompt": "The gap between each consecutive pair of chapter numbers.",
+      "hint": "You need each element alongside the one after it.",
+      "starter": "readings.",
+      "answer": "readings.map { it.chapter }.zipWithNext { a, b -> b - a }",
+      "output": "[1, -1, 0, 1, -1, 1, 1]   // 7 elements; the negatives are book boundaries",
+      "steps": [
+        "Reduce to the numbers first with map { it.chapter }.",
+        "zipWithNext hands the lambda each element and its immediate successor.",
+        "The result is n - 1 long, and the negatives appear where the log jumps to a different book. Empty or single-element input gives an empty list, not a crash."
+      ],
+      "why": "zipWithNext is the idiomatic pairwise scan — deltas, gaps, transitions.",
+      "anotherTake": {
+        "prompt": "Does each consecutive pair of readings stay on the same book?",
+        "answer": "readings.zipWithNext { a, b -> a.bookId == b.bookId }",
+        "output": "[true, false, false, true, false, true, true]",
+        "from": "List<Reading>",
+        "to": "List<Boolean>",
+        "starter": "readings."
+      }
+    },
+    {
+      "id": "windowed",
+      "operator": "windowed",
+      "from": "List<Reading>",
+      "to": "List<Double>",
+      "prompt": "Rolling average of minutes over a 3-reading window.",
+      "hint": "Overlapping groups of three. What happens at the end of the list?",
+      "starter": "readings.",
+      "answer": "readings.map { it.minutes }.windowed(3) { it.average() }",
+      "output": "[23.66..., 23.33..., 22.66..., 23.0, 23.33..., 26.0]   // 6 windows from 8 items",
+      "steps": [
+        "map to minutes so the window has numbers to average.",
+        "windowed(3) slides one element at a time by default (step = 1).",
+        "The transform lambda runs per window. Trailing partial windows are dropped unless partialWindows = true, so 8 items give 6 windows, not 8."
+      ],
+      "why": "windowed overlaps and drops the short tail. chunked does the opposite on both counts.",
+      "anotherTake": {
+        "prompt": "The average of each overlapping pair of session lengths.",
+        "answer": "readings.map { it.minutes }.windowed(2) { it.average() }",
+        "output": "[23.0, 23.5, 24.0, 21.5, 23.0, 25.0, 26.0]",
+        "from": "List<Reading>",
+        "to": "List<Double>",
+        "starter": "readings."
+      }
+    },
+    {
+      "id": "chunked",
+      "operator": "chunked",
+      "from": "List<Book>",
+      "to": "List<List<Book>>",
+      "prompt": "Page the library into batches of 5.",
+      "hint": "Pages don't overlap, and you can't drop the last one.",
+      "starter": "library.",
+      "answer": "library.chunked(5)",
+      "output": "[[Atlas, Borealis, Cartographers, Driftwood, Embers], [Foxfire]]",
+      "steps": [
+        "Non-overlapping means chunked, not windowed.",
+        "chunked(5) splits 6 items into a full chunk of 5 and a chunk of 1.",
+        "It's windowed(5, step = 5, partialWindows = true) underneath — which is exactly why the short tail survives."
+      ],
+      "why": "chunked is for batching and paging; windowed is for rolling analysis.",
+      "anotherTake": {
+        "prompt": "Total minutes per batch of four readings — chunked takes a transform too.",
+        "answer": "readings.chunked(4) { page -> page.sumOf { it.minutes } }",
+        "output": "[94, 98]",
+        "from": "List<Reading>",
+        "to": "List<Int>",
+        "starter": "readings."
+      }
+    },
+    {
+      "id": "sortedWith",
+      "operator": "sortedWith",
+      "from": "List<Book>",
+      "to": "List<Book>",
+      "prompt": "Score descending, nulls last, then title ascending as the tiebreak.",
+      "hint": "Two keys. Can sortedBy express that?",
+      "starter": "library.",
+      "answer": "library.sortedWith(\n    compareByDescending<Book> { it.score ?: 0 }.thenBy { it.title }\n)",
+      "output": "[Cartographers, Foxfire, Atlas, Driftwood, Borealis, Embers]",
+      "steps": [
+        "sortedBy takes a single selector, so a second key means building a Comparator.",
+        "compareByDescending<Book> { it.score ?: 0 } — the explicit type argument is usually needed, since inference has nothing else to go on.",
+        "thenBy { it.title } breaks ties ascending. Coercing null to 0 sinks the unrated pair to the bottom."
+      ],
+      "why": "compareBy / compareByDescending / thenBy / thenByDescending compose into any multi-key ordering.",
+      "anotherTake": {
+        "prompt": "Most genre tags first, oldest year as the tiebreak.",
+        "answer": "library.sortedWith(\n    compareByDescending<Book> { it.genres.size }.thenBy { it.year }\n)",
+        "output": "[Cartographers, Atlas, Driftwood, Foxfire, Borealis, Embers]",
+        "from": "List<Book>",
+        "to": "List<Book>",
+        "starter": "library."
+      }
+    },
+    {
+      "id": "maxByOrNull",
+      "operator": "maxByOrNull",
+      "from": "List<Book>",
+      "to": "Map.Entry<String, Int>?",
+      "prompt": "The author with the most minutes read.",
+      "hint": "Build the per-author totals first, then take the max of a Map.",
+      "starter": "library.",
+      "answer": "library.groupBy { it.author }\n    .mapValues { (_, books) ->\n        books.sumOf { a -> readings.filter { it.bookId == a.id }.sumOf { w -> w.minutes } }\n    }\n    .maxByOrNull { it.value }",
+      "output": "Voss=121       // Marlowe=71, Okafor=0",
+      "steps": [
+        "groupBy author, then mapValues to turn each list of books into a number.",
+        "Inside, sum each book's own readings, then sum those per-book totals.",
+        "maxByOrNull { it.value } returns the whole entry — key and value — and is nullable because the map could be empty. maxOf would return only the number."
+      ],
+      "why": "The OrNull suffix is mandatory since 1.4; the throwing maxBy was removed.",
+      "anotherTake": {
+        "prompt": "The newest book in the library.",
+        "answer": "library.maxByOrNull { it.year }",
+        "output": "Foxfire",
+        "from": "List<Book>",
+        "to": "Book?",
+        "starter": "library."
+      }
+    },
+    {
+      "id": "distinctBy",
+      "operator": "distinctBy",
+      "from": "List<Book>",
+      "to": "List<Book>",
+      "prompt": "One book per author — first seen wins.",
+      "hint": "distinct() would return all six. Why?",
+      "starter": "library.",
+      "answer": "library.distinctBy { it.author }",
+      "output": "[Atlas, Borealis, Driftwood]",
+      "steps": [
+        "distinct() dedupes on equals/hashCode of the whole Book, and all six differ — nothing would be removed.",
+        "distinctBy dedupes on a derived key instead: it.author.",
+        "The first occurrence of each key survives, so you get Atlas, Borealis and Driftwood."
+      ],
+      "why": "The By suffix across the stdlib means 'compare a derived key rather than the element'.",
+      "anotherTake": {
+        "prompt": "One reading per book — the first chapter logged wins.",
+        "answer": "readings.distinctBy { it.bookId }",
+        "output": "[book 1 · ch 1 · 24 min, book 3 · ch 1 · 25 min, book 4 · ch 1 · 23 min, book 6 · ch 1 · 26 min]",
+        "from": "List<Reading>",
+        "to": "List<Reading>",
+        "starter": "readings."
+      }
+    },
+    {
+      "id": "none",
+      "operator": "none",
+      "from": "List<Book>",
+      "to": "Boolean",
+      "prompt": "Is every book rated? Express it with none.",
+      "hint": "Invert the question rather than the predicate's owner.",
+      "starter": "library.",
+      "answer": "library.none { it.score == null }",
+      "output": "false           // Borealis and Embers are unrated",
+      "steps": [
+        "\"Every book is rated\" inverted is \"no book is unrated\".",
+        "The predicate becomes it.score == null.",
+        "Returns false here. The trap: on an empty list both none {} and all {} return true — vacuous truth, and a genuine source of bugs."
+      ],
+      "why": "All three short-circuit on the first decisive element, so they're cheap on long lists.",
+      "anotherTake": {
+        "prompt": "Confirm no session ran under twenty minutes.",
+        "answer": "readings.none { it.minutes < 20 }",
+        "output": "true            // the shortest is exactly 20",
+        "from": "List<Reading>",
+        "to": "Boolean",
+        "starter": "readings."
+      }
+    },
+    {
+      "id": "sumOf",
+      "operator": "sumOf",
+      "from": "List<Reading>",
+      "to": "Int",
+      "prompt": "Total minutes again — the idiomatic one-liner.",
+      "hint": "You did this with fold. Now do it the way you'd write it in review.",
+      "starter": "readings.",
+      "answer": "readings.sumOf { it.minutes }",
+      "output": "192",
+      "steps": [
+        "The lambda returns Int, so the Int overload of sumOf is chosen — a Double lambda would pick the Double one.",
+        "sumOf is inline: no intermediate list, no boxing.",
+        "Same 192 as the fold version, with the intent stated instead of assembled."
+      ],
+      "why": "sumBy and sumByDouble were deprecated because their overloads couldn't be resolved cleanly. sumOf replaced both.",
+      "anotherTake": {
+        "prompt": "Total chapters logged, across every reading.",
+        "answer": "readings.sumOf { it.chapter }",
+        "output": "13",
+        "from": "List<Reading>",
+        "to": "Int",
+        "starter": "readings."
+      }
+    },
+    {
+      "id": "asSequence",
+      "operator": "asSequence",
+      "from": "List<Book>",
+      "to": "String",
+      "prompt": "First title starting with \"A\" — without building intermediate lists.",
+      "hint": "On a List, how many times does map run before filter sees anything?",
+      "starter": "library.",
+      "answer": "library.asSequence()\n    .map { it.title }\n    .filter { it.startsWith(\"A\") }\n    .first()",
+      "output": "Atlas           // map ran exactly once",
+      "steps": [
+        "asSequence() switches the chain from eager to lazy.",
+        "Each element now flows through map and filter individually, rather than the whole list completing each stage.",
+        "first() is a terminal operation and stops immediately. Atlas is element 0, so map ran once — on a List it would have run six times and allocated a full list first."
+      ],
+      "why": "Sequences pay off on long chains and early exits; on small lists the wrapper overhead can make them slower.",
+      "anotherTake": {
+        "prompt": "The first score of 9 or better — lazily, so the tail is never examined.",
+        "answer": "library.asSequence()\n    .mapNotNull { it.score }\n    .first { it >= 9 }",
+        "output": "9               // Cartographers; nothing after it was touched",
+        "from": "List<Book>",
+        "to": "Int",
+        "starter": "library."
+      }
+    },
+    {
+      "id": "map",
+      "operator": "map",
+      "from": "List<Book>",
+      "to": "List<String>",
+      "prompt": "Just the titles, in library order.",
+      "hint": "One out per one in. Nothing is being dropped or combined here.",
+      "starter": "library.",
+      "answer": "library.map { it.title }",
+      "output": "[Atlas, Borealis, Cartographers, Driftwood, Embers, Foxfire]",
+      "steps": [
+        "map is the 1:1 transform: six books in, six strings out, order preserved.",
+        "The lambda returns the new element — it.title — and map infers List<String> from it.",
+        "Nothing is filtered, so a null-scored book still contributes a title."
+      ],
+      "why": "Reach for map when the count stays the same and only the shape of each element changes. The moment you find yourself returning a list from the lambda, you wanted flatMap.",
+      "anotherTake": {
+        "prompt": "Each book's genre count, in library order.",
+        "answer": "library.map { it.genres.size }",
+        "output": "[2, 1, 2, 2, 1, 2]",
+        "from": "List<Book>",
+        "to": "List<Int>",
+        "starter": "library."
+      }
+    },
+    {
+      "id": "map-format",
+      "operator": "map",
+      "from": "List<Book>",
+      "to": "List<String>",
+      "prompt": "Each book as \"Title (year)\".",
+      "hint": "The lambda's return type is what decides the result type.",
+      "starter": "library.",
+      "answer": "library.map { \"${it.title} (${it.year})\" }",
+      "output": "[Atlas (2019), Borealis (2021), Cartographers (2018), Driftwood (2020), Embers (2021), Foxfire (2023)]",
+      "steps": [
+        "Still 1:1 — formatting is a transform like any other.",
+        "The string template reads two fields off the same element; the lambda parameter is the whole Book.",
+        "The result type follows the lambda: List<String>, not List<Book>."
+      ],
+      "why": "map is where display formatting belongs, not the composable that renders it. A list of strings is testable without a screen.",
+      "anotherTake": {
+        "prompt": "Each reading as \"ch N · N min\".",
+        "answer": "readings.map { \"ch ${it.chapter} · ${it.minutes} min\" }",
+        "output": "[ch 1 · 24 min, ch 2 · 22 min, ch 1 · 25 min, ch 1 · 23 min, ch 2 · 20 min, ch 1 · 26 min, ch 2 · 24 min, ch 3 · 28 min]",
+        "from": "List<Reading>",
+        "to": "List<String>",
+        "starter": "readings."
+      }
+    },
+    {
+      "id": "filter",
+      "operator": "filter",
+      "from": "List<Book>",
+      "to": "List<Book>",
+      "prompt": "The books scored 9 or better. Unrated ones do not qualify.",
+      "hint": "score is Int?. What does a null do to a >= comparison?",
+      "starter": "library.",
+      "answer": "library.filter { (it.score ?: 0) >= 9 }",
+      "output": "[Cartographers, Foxfire]",
+      "steps": [
+        "filter keeps the elements the predicate answers true for and drops the rest — the type does not change.",
+        "score is nullable, so it cannot be compared directly; ?: 0 stands the nulls down explicitly.",
+        "Two survive. The element type is still Book, because filter narrows the list, not the element."
+      ],
+      "why": "filter never changes the element type — that is the difference between it and mapNotNull. Deciding what a null means is the predicate's job, and doing it in the open beats letting an exclamation mark decide.",
+      "anotherTake": {
+        "prompt": "The readings that ran past 24 minutes.",
+        "answer": "readings.filter { it.minutes > 24 }",
+        "output": "[book 3 · ch 1 · 25 min, book 6 · ch 1 · 26 min, book 6 · ch 3 · 28 min]",
+        "from": "List<Reading>",
+        "to": "List<Reading>",
+        "starter": "readings."
+      }
+    },
+    {
+      "id": "filter-two-conditions",
+      "operator": "filter",
+      "from": "List<Book>",
+      "to": "List<Book>",
+      "prompt": "Everything Marlowe wrote after 2018.",
+      "hint": "One predicate, two conditions. There is no need for two passes.",
+      "starter": "library.",
+      "answer": "library.filter { it.author == \"Marlowe\" && it.year > 2018 }",
+      "output": "[Atlas, Embers]",
+      "steps": [
+        "Both conditions live in one predicate: chaining a second filter would walk the list twice for no gain.",
+        "&& short-circuits per element, so the year is only read for Marlowe titles.",
+        "Encounter order survives, so Atlas stays ahead of Embers."
+      ],
+      "why": "Two chained filters and one filter with && produce the same list; the difference is one pass versus two. On six elements it does not matter, and saying it in one predicate still reads better.",
+      "anotherTake": {
+        "prompt": "Thrillers scored 8 or better.",
+        "answer": "library.filter { \"Thriller\" in it.genres && (it.score ?: 0) >= 8 }",
+        "output": "[Atlas, Cartographers]   // Driftwood is a Thriller but sits at 7",
+        "from": "List<Book>",
+        "to": "List<Book>",
+        "starter": "library."
+      }
+    },
+    {
+      "id": "fold-into-a-map",
+      "operator": "fold",
+      "from": "List<Reading>",
+      "to": "Map<Int, Int>",
+      "prompt": "Total minutes per book id, using fold.",
+      "hint": "The accumulator does not have to be a number. What type is the answer?",
+      "starter": "readings.",
+      "answer": "readings.fold(emptyMap<Int, Int>()) { acc, w ->\n    acc + (w.bookId to (acc[w.bookId] ?: 0) + w.minutes)\n}",
+      "output": "{1=46, 3=25, 4=43, 6=78}",
+      "steps": [
+        "The seed fixes R — here an empty Map<Int, Int>, which is what makes this a fold rather than a sum.",
+        "Map + Pair returns a new map with that key replaced, so the accumulator stays immutable.",
+        "acc[w.bookId] ?: 0 is the running total for that id, or zero the first time the id appears."
+      ],
+      "why": "fold's accumulator can be any type at all, which is why it can build a map, a string or a whole data class. groupingBy().fold() does this same job in one pass without rebuilding the map each step.",
+      "anotherTake": {
+        "prompt": "Books per author, using fold — the accumulator is a map again.",
+        "answer": "library.fold(emptyMap<String, Int>()) { acc, a ->\n    acc + (a.author to (acc[a.author] ?: 0) + 1)\n}",
+        "output": "{Marlowe=3, Okafor=1, Voss=2}",
+        "from": "List<Book>",
+        "to": "Map<String, Int>",
+        "starter": "library."
+      }
+    },
+    {
+      "id": "fold-into-a-string",
+      "operator": "fold",
+      "from": "List<Book>",
+      "to": "String",
+      "prompt": "The authors as one comma-separated line, without joinToString.",
+      "hint": "The seed is an empty string. What goes wrong on the very first element?",
+      "starter": "library.",
+      "answer": "library.fold(\"\") { acc, a ->\n    if (acc.isEmpty()) a.author else \"$acc, ${a.author}\"\n}",
+      "output": "Marlowe, Okafor, Marlowe, Voss, Marlowe, Voss   // duplicates kept",
+      "steps": [
+        "The seed is \"\", so R is String and the accumulator is the line built so far.",
+        "The first step has nothing to separate from, which is exactly the case the if guards.",
+        "Duplicates are kept — this is a fold over the library, not over its distinct authors."
+      ],
+      "why": "Every fold that builds a separated string has this first-element problem, and it is why joinToString exists. Write the fold to understand it, then use the standard library.",
+      "anotherTake": {
+        "prompt": "The chapter trail as one dashed line.",
+        "answer": "readings.fold(\"\") { acc, w ->\n    if (acc.isEmpty()) \"${w.chapter}\" else \"$acc-${w.chapter}\"\n}",
+        "output": "1-2-1-1-2-1-2-3",
+        "from": "List<Reading>",
+        "to": "String",
+        "starter": "readings."
+      }
+    },
+    {
+      "id": "reduce-minimum",
+      "operator": "reduce",
+      "from": "List<Book>",
+      "to": "Int",
+      "prompt": "The lowest score present, via reduce.",
+      "hint": "reduce is (T, T) -> T. The nulls have to be gone before it runs.",
+      "starter": "library.",
+      "answer": "library.mapNotNull { it.score }.reduce { a, b -> minOf(a, b) }",
+      "output": "7               // from [8, 9, 7, 9]",
+      "steps": [
+        "mapNotNull first: reduce cannot compare an Int? with an Int, and there is no seed to supply one.",
+        "The lambda carries the smaller of the two forward, so the winner accumulates left to right.",
+        "The first score seeds it. Every book being unrated would leave an empty list, and this line would throw."
+      ],
+      "why": "reduce is the right call only when the list cannot be empty and the accumulator is the element type. Otherwise it is fold, or minOrNull.",
+      "anotherTake": {
+        "prompt": "The earliest publication year, via reduce.",
+        "answer": "library.map { it.year }.reduce { a, b -> minOf(a, b) }",
+        "output": "2018",
+        "from": "List<Book>",
+        "to": "Int",
+        "starter": "library."
+      }
+    },
+    {
+      "id": "runningFold-count",
+      "operator": "runningFold",
+      "from": "List<Book>",
+      "to": "List<Int>",
+      "prompt": "The running count of Marlowe titles as you walk the library.",
+      "hint": "runningFold emits the accumulator at every step, including before the first element.",
+      "starter": "library.",
+      "answer": "library.runningFold(0) { acc, a -> if (a.author == \"Marlowe\") acc + 1 else acc }",
+      "output": "[0, 1, 1, 2, 2, 3, 3]   // 7 numbers from 6 books — the seed is emitted first",
+      "steps": [
+        "Same seed and same step lambda as a fold — the only difference is what comes back.",
+        "The result opens with the seed itself, so six books produce seven numbers.",
+        "Elements that do not match return the accumulator unchanged, which is what makes the flat stretches."
+      ],
+      "why": "runningFold is a fold that shows its work, and it is what you want behind a progress chart. scan is the same function under its older name.",
+      "anotherTake": {
+        "prompt": "The running total of genre tags as you walk the library.",
+        "answer": "library.runningFold(0) { acc, a -> acc + a.genres.size }",
+        "output": "[0, 2, 3, 5, 7, 8, 10]",
+        "from": "List<Book>",
+        "to": "List<Int>",
+        "starter": "library."
+      }
+    },
+    {
+      "id": "flatMap-pairs",
+      "operator": "flatMap",
+      "from": "List<Book>",
+      "to": "List<Pair<String, String>>",
+      "prompt": "Every title paired with each of its genres.",
+      "hint": "The inner lambda has to see both the book and the genre. What is in scope inside flatMap's lambda?",
+      "starter": "library.",
+      "answer": "library.flatMap { a -> a.genres.map { g -> a.title to g } }",
+      "output": "[(Atlas, Thriller), (Atlas, Sci-Fi), (Borealis, Memoir), (Cartographers, Thriller), (Cartographers, Adventure), (Driftwood, Thriller), (Driftwood, Comedy), (Embers, Mystery), (Foxfire, Fantasy), (Foxfire, Drama)]   // 10 pairs from 6 books",
+      "steps": [
+        "flatMap's lambda must return an Iterable, and map over the genres is what produces one.",
+        "Naming the outer parameter `a` is what keeps the book reachable from inside the inner lambda — two nested `it`s would shadow.",
+        "Ten pairs from six books: flatMap concatenates the inner lists rather than nesting them."
+      ],
+      "why": "flatMap plus an inner map is the standard shape for a cartesian expansion of a parent and its children. Name the outer lambda parameter the moment there are two levels.",
+      "anotherTake": {
+        "prompt": "Every (author, genre) pair — duplicates included.",
+        "answer": "library.flatMap { a -> a.genres.map { g -> a.author to g } }",
+        "output": "[(Marlowe, Thriller), (Marlowe, Sci-Fi), (Okafor, Memoir), (Marlowe, Thriller), (Marlowe, Adventure), (Voss, Thriller), (Voss, Comedy), (Marlowe, Mystery), (Voss, Fantasy), (Voss, Drama)]",
+        "from": "List<Book>",
+        "to": "List<Pair<String, String>>",
+        "starter": "library."
+      }
+    },
+    {
+      "id": "flatten-groups",
+      "operator": "flatten",
+      "from": "List<List<Book>>",
+      "to": "List<Book>",
+      "prompt": "Given val perAuthor = library.groupBy { it.author }.values.toList() — put it back into one list.",
+      "hint": "The grouping already made the nesting. Nothing needs transforming.",
+      "starter": "perAuthor.",
+      "answer": "perAuthor.flatten()",
+      "output": "[Atlas, Cartographers, Embers, Borealis, Driftwood, Foxfire]   // Marlowe first: the groups, concatenated",
+      "steps": [
+        "perAuthor is already List<List<Book>>, so there is nothing for a lambda to do.",
+        "flatten concatenates one level in order, which here means group by group.",
+        "The result is the whole library, but reordered: everything Marlowe wrote comes first, because that group came first."
+      ],
+      "why": "Flattening a grouping is not the inverse of grouping it — the elements come back sorted by group. Use it when that ordering is what you wanted.",
+      "anotherTake": {
+        "prompt": "Given val pages = library.chunked(2) — back to one flat list.",
+        "answer": "pages.flatten()",
+        "output": "[Atlas, Borealis, Cartographers, Driftwood, Embers, Foxfire]",
+        "from": "List<List<Book>>",
+        "to": "List<Book>",
+        "starter": "pages."
+      }
+    },
+    {
+      "id": "associateBy-two-lambdas",
+      "operator": "associateBy",
+      "from": "List<Book>",
+      "to": "Map<Int, String>",
+      "prompt": "Id to title, using associateBy.",
+      "hint": "associateBy has a second overload. What does the extra lambda control?",
+      "starter": "library.",
+      "answer": "library.associateBy({ it.id }, { it.title })",
+      "output": "{1=Atlas, 2=Borealis, 3=Cartographers, 4=Driftwood, 5=Embers, 6=Foxfire}",
+      "steps": [
+        "The one-lambda form would give Map<Int, Book>; the value side here is a String, so the value has to be selected too.",
+        "First lambda is the key, second is the value — in that order, and neither is optional once you use this overload.",
+        "Duplicate keys would still resolve last-wins, exactly as in the single-lambda form."
+      ],
+      "why": "associateBy with two lambdas and associate with a Pair produce the same map. Pick associateBy when the key is the interesting half, associate when both sides are being computed together.",
+      "anotherTake": {
+        "prompt": "Id to author, in one associateBy.",
+        "answer": "library.associateBy({ it.id }, { it.author })",
+        "output": "{1=Marlowe, 2=Okafor, 3=Marlowe, 4=Voss, 5=Marlowe, 6=Voss}",
+        "from": "List<Book>",
+        "to": "Map<Int, String>",
+        "starter": "library."
+      }
+    },
+    {
+      "id": "associate-pairs",
+      "operator": "associate",
+      "from": "List<Book>",
+      "to": "Map<String, String>",
+      "prompt": "Title to author.",
+      "hint": "One lambda, and it returns both halves.",
+      "starter": "library.",
+      "answer": "library.associate { it.title to it.author }",
+      "output": "{Atlas=Marlowe, Borealis=Okafor, Cartographers=Marlowe, Driftwood=Voss, Embers=Marlowe, Foxfire=Voss}",
+      "steps": [
+        "associate's lambda returns a Pair, and `to` is what builds one.",
+        "Both sides are derived from the element, so neither the key nor the value is the Book itself.",
+        "Titles are unique here, so nothing is overwritten."
+      ],
+      "why": "associate allocates a Pair per element, which associateBy and associateWith avoid. It is the right call only when both halves are computed — reach for the others when one of them is the element.",
+      "anotherTake": {
+        "prompt": "Year to title — and 2021 shows who wins a collision.",
+        "answer": "library.associate { it.year to it.title }",
+        "output": "{2019=Atlas, 2021=Embers, 2018=Cartographers, 2020=Driftwood, 2023=Foxfire}   // Borealis lost 2021 to the later Embers",
+        "from": "List<Book>",
+        "to": "Map<Int, String>",
+        "starter": "library."
+      }
+    },
+    {
+      "id": "associateWith-counts",
+      "operator": "associateWith",
+      "from": "List<Book>",
+      "to": "Map<String, Int>",
+      "prompt": "Each distinct author mapped to how many books they wrote.",
+      "hint": "The receiver is the key list. What does associateWith supply?",
+      "starter": "library.",
+      "answer": "library.map { it.author }.distinct()\n    .associateWith { s -> library.count { it.author == s } }",
+      "output": "{Marlowe=3, Okafor=1, Voss=2}",
+      "steps": [
+        "The receiver becomes the keys, so it has to be the distinct authors rather than the library.",
+        "associateWith's lambda computes the value from the key — the mirror of associateBy.",
+        "This walks the library once per author. groupingBy().eachCount() does the same job in a single pass."
+      ],
+      "why": "associateWith is for when you already hold the keys. If you are deriving the keys from the same collection you are counting, that is a grouping, not an association.",
+      "anotherTake": {
+        "prompt": "Each distinct year mapped to how many books it brought.",
+        "answer": "library.map { it.year }.distinct()\n    .associateWith { y -> library.count { it.year == y } }",
+        "output": "{2019=1, 2021=2, 2018=1, 2020=1, 2023=1}",
+        "from": "List<Book>",
+        "to": "Map<Int, Int>",
+        "starter": "library."
+      }
+    },
+    {
+      "id": "groupBy-decade",
+      "operator": "groupBy",
+      "from": "List<Book>",
+      "to": "Map<Int, List<Book>>",
+      "prompt": "The library grouped by decade.",
+      "hint": "The key selector can compute anything — it does not have to be a field.",
+      "starter": "library.",
+      "answer": "library.groupBy { it.year / 10 * 10 }",
+      "output": "{2010=[Atlas, Cartographers], 2020=[Borealis, Driftwood, Embers, Foxfire]}",
+      "steps": [
+        "Integer division truncates, so 2019 / 10 * 10 is 2010 — the standard way to bucket a year.",
+        "Keys appear in the order they are first seen, so 2010 comes before 2020.",
+        "Every book lands in exactly one group; groupBy never drops an element."
+      ],
+      "why": "A derived key is what separates groupBy from a field lookup. Anything the lambda can compute can be a bucket.",
+      "anotherTake": {
+        "prompt": "The library grouped by whether it has a score.",
+        "answer": "library.groupBy { it.score != null }",
+        "output": "{true=[Atlas, Cartographers, Driftwood, Foxfire], false=[Borealis, Embers]}",
+        "from": "List<Book>",
+        "to": "Map<Boolean, List<Book>>",
+        "starter": "library."
+      }
+    },
+    {
+      "id": "groupBy-two-lambdas",
+      "operator": "groupBy",
+      "from": "List<Book>",
+      "to": "Map<String, List<String>>",
+      "prompt": "Genre to the titles that carry it.",
+      "hint": "A book has several genres, so it belongs in several groups. What has to happen before the grouping?",
+      "starter": "library.",
+      "answer": "library.flatMap { a -> a.genres.map { g -> g to a.title } }\n    .groupBy({ it.first }, { it.second })",
+      "output": "{Thriller=[Atlas, Cartographers, Driftwood], Sci-Fi=[Atlas], Memoir=[Borealis], Adventure=[Cartographers], Comedy=[Driftwood], Mystery=[Embers], Fantasy=[Foxfire], Drama=[Foxfire]}",
+      "steps": [
+        "An element that belongs in several groups has to be expanded first: flatMap gives one pair per genre.",
+        "groupBy's second lambda transforms the value, so the lists hold titles rather than the pairs themselves.",
+        "Thriller collects three titles; every other genre collects one."
+      ],
+      "why": "groupBy takes a value transform for exactly this case, and using it saves a mapValues afterwards. Whenever one element belongs in several groups, the flatMap comes first.",
+      "anotherTake": {
+        "prompt": "Author to the years they published, using both lambdas.",
+        "answer": "library.groupBy({ it.author }, { it.year })",
+        "output": "{Marlowe=[2019, 2018, 2021], Okafor=[2021], Voss=[2020, 2023]}",
+        "from": "List<Book>",
+        "to": "Map<String, List<Int>>",
+        "starter": "library."
+      }
+    },
+    {
+      "id": "groupingBy-fold",
+      "operator": "groupingBy",
+      "from": "List<Reading>",
+      "to": "Map<Int, Int>",
+      "prompt": "Total minutes per book id, in one pass.",
+      "hint": "eachCount is not the only thing a Grouping can do.",
+      "starter": "readings.",
+      "answer": "readings.groupingBy { it.bookId }.fold(0) { acc, w -> acc + w.minutes }",
+      "output": "{1=46, 3=25, 4=43, 6=78}",
+      "steps": [
+        "groupingBy returns a lazy handle — no lists are built, and nothing happens until a terminal call.",
+        "fold seeds each group independently, so every id starts its own total at 0.",
+        "One pass over the readings, one entry per id."
+      ],
+      "why": "groupBy().mapValues { it.value.sumOf(...) } gives the same answer and materialises every group on the way. Grouping exists so that the intermediate lists never have to exist.",
+      "anotherTake": {
+        "prompt": "The furthest chapter reached per book, in one pass.",
+        "answer": "readings.groupingBy { it.bookId }.fold(0) { acc, w -> maxOf(acc, w.chapter) }",
+        "output": "{1=2, 3=1, 4=2, 6=3}",
+        "from": "List<Reading>",
+        "to": "Map<Int, Int>",
+        "starter": "readings."
+      }
+    },
+    {
+      "id": "eachCount",
+      "operator": "eachCount",
+      "from": "List<Book>",
+      "to": "Map<String, Int>",
+      "prompt": "How many books carry each genre.",
+      "hint": "The elements have to be genres before they can be counted as genres.",
+      "starter": "library.",
+      "answer": "library.flatMap { it.genres }.groupingBy { it }.eachCount()",
+      "output": "{Thriller=3, Sci-Fi=1, Memoir=1, Adventure=1, Comedy=1, Mystery=1, Fantasy=1, Drama=1}",
+      "steps": [
+        "flatMap turns six books into ten genre strings, duplicates included — the duplicates are the count.",
+        "groupingBy { it } keys each element by itself, which is the identity grouping.",
+        "eachCount tallies per key in one pass, without ever building the lists."
+      ],
+      "why": "eachCount is the terminal you want whenever the question is \"how many of each\". Building the groups first and taking .size of them is the same answer, computed the long way.",
+      "anotherTake": {
+        "prompt": "How many readings landed on each chapter number.",
+        "answer": "readings.groupingBy { it.chapter }.eachCount()",
+        "output": "{1=4, 2=3, 3=1}",
+        "from": "List<Reading>",
+        "to": "Map<Int, Int>",
+        "starter": "readings."
+      }
+    },
+    {
+      "id": "mapValues-sizes",
+      "operator": "mapValues",
+      "from": "List<Book>",
+      "to": "Map<String, Int>",
+      "prompt": "Author to how many books they wrote, starting from a grouping.",
+      "hint": "The keys are already right. Only the values need to change.",
+      "starter": "library.",
+      "answer": "library.groupBy { it.author }.mapValues { (_, books) -> books.size }",
+      "output": "{Marlowe=3, Okafor=1, Voss=2}",
+      "steps": [
+        "mapValues keeps every key and replaces every value, so the map's shape is unchanged.",
+        "The lambda receives a Map.Entry, and destructuring it names the half that is actually used.",
+        "The underscore says the key is deliberately ignored, which is the convention worth keeping."
+      ],
+      "why": "This and groupingBy().eachCount() return the same map. The difference is that this one built three lists to measure them and then threw them away.",
+      "anotherTake": {
+        "prompt": "Readings per book the two-step way — groupBy, then sizes.",
+        "answer": "readings.groupBy { it.bookId }.mapValues { (_, rs) -> rs.size }",
+        "output": "{1=2, 3=1, 4=2, 6=3}   // groupingBy gets there without the intermediate lists",
+        "from": "List<Reading>",
+        "to": "Map<Int, Int>",
+        "starter": "readings."
+      }
+    },
+    {
+      "id": "mapKeys-uppercase",
+      "operator": "mapKeys",
+      "from": "Map<String, List<Book>>",
+      "to": "Map<String, List<Book>>",
+      "prompt": "Given val byAuthor = library.groupBy { it.author } — uppercase its keys.",
+      "hint": "The mirror of mapValues. What does the lambda return here?",
+      "starter": "byAuthor.",
+      "answer": "byAuthor.mapKeys { (author, _) -> author.uppercase() }",
+      "output": "{MARLOWE=[Atlas, Cartographers, Embers], OKAFOR=[Borealis], VOSS=[Driftwood, Foxfire]}",
+      "steps": [
+        "mapKeys returns the new key from the lambda and carries every value across untouched.",
+        "The entry is destructured, with the value ignored — the underscore says that is deliberate.",
+        "Two keys that collided after transforming would silently merge, last one winning; uppercase is safe here because the authors differ by more than case."
+      ],
+      "why": "mapKeys can lose entries and mapValues cannot, because only keys can collide. Transform a key and you are responsible for whether it stays unique.",
+      "anotherTake": {
+        "prompt": "Given val byDecade = library.groupBy { it.year / 10 * 10 } — label the keys as decades.",
+        "answer": "byDecade.mapKeys { (decade, _) -> \"${decade}s\" }",
+        "output": "{2010s=[Atlas, Cartographers], 2020s=[Borealis, Driftwood, Embers, Foxfire]}",
+        "from": "Map<Int, List<Book>>",
+        "to": "Map<String, List<Book>>",
+        "starter": "byDecade."
+      }
+    },
+    {
+      "id": "mapNotNull-format",
+      "operator": "mapNotNull",
+      "from": "List<Book>",
+      "to": "List<String>",
+      "prompt": "\"Title (score)\" for the rated books only.",
+      "hint": "One operator does both the filtering and the transforming. What has to be null for an element to be dropped?",
+      "starter": "library.",
+      "answer": "library.mapNotNull { a -> a.score?.let { \"${a.title} ($it)\" } }",
+      "output": "[Atlas (8), Cartographers (9), Driftwood (7), Foxfire (9)]",
+      "steps": [
+        "The lambda returns String?, and mapNotNull drops exactly the elements where it returns null.",
+        "?.let is what makes the whole expression null when the score is: inside the block, it is a non-null Int.",
+        "Four survive, and the result type is List<String> rather than List<String?>."
+      ],
+      "why": "filter-then-map needs the null check twice — once in the predicate and once with an exclamation mark. mapNotNull with ?.let states it once and narrows the type on the way out.",
+      "anotherTake": {
+        "prompt": "The titles of the unrated books — the test inverted.",
+        "answer": "library.mapNotNull { a -> if (a.score == null) a.title else null }",
+        "output": "[Borealis, Embers]",
+        "from": "List<Book>",
+        "to": "List<String>",
+        "starter": "library."
+      }
+    },
+    {
+      "id": "partition-lengths",
+      "operator": "partition",
+      "from": "List<Reading>",
+      "to": "Pair<List<Reading>, List<Reading>>",
+      "prompt": "Split the readings into long (24 minutes or more) and short, keeping both halves.",
+      "hint": "filter would give you one side. What do you do with the other?",
+      "starter": "readings.",
+      "answer": "val (long, short) = readings.partition { it.minutes >= 24 }",
+      "output": "long  = [book 1 · ch 1 · 24 min, book 3 · ch 1 · 25 min, book 6 · ch 1 · 26 min, book 6 · ch 2 · 24 min, book 6 · ch 3 · 28 min]\nshort = [book 1 · ch 2 · 22 min, book 4 · ch 1 · 23 min, book 4 · ch 2 · 20 min]",
+      "steps": [
+        "partition runs the predicate once per element and files it into first or second — no element is lost.",
+        "The destructuring declaration names the halves; without it you are reading .first and .second everywhere.",
+        "Order inside each half is the order they appeared in."
+      ],
+      "why": "partition is filter and filterNot in one pass, and the pair is worth destructuring immediately. A variable called `second` tells the next reader nothing.",
+      "anotherTake": {
+        "prompt": "Marlowe on one shelf, everyone else on the other.",
+        "answer": "val (marlowe, others) = library.partition { it.author == \"Marlowe\" }",
+        "output": "marlowe = [Atlas, Cartographers, Embers]\nothers  = [Borealis, Driftwood, Foxfire]",
+        "from": "List<Book>",
+        "to": "Pair<List<Book>, List<Book>>",
+        "starter": "library."
+      }
+    },
+    {
+      "id": "zipWithNext-deltas",
+      "operator": "zipWithNext",
+      "from": "List<Reading>",
+      "to": "List<Int>",
+      "prompt": "The change in session length from each reading to the next.",
+      "hint": "n elements in, how many out?",
+      "starter": "readings.",
+      "answer": "readings.map { it.minutes }.zipWithNext { a, b -> b - a }",
+      "output": "[-2, 3, -2, -3, 6, -2, 4]   // 7 deltas from 8 readings",
+      "steps": [
+        "map first: zipWithNext pairs adjacent elements, and comparing whole Reading objects is not what is wanted.",
+        "The lambda receives each element with its successor, so b - a is the step from one to the next.",
+        "Eight readings give seven deltas — there is no pair for the last element."
+      ],
+      "why": "Every adjacent-pair question is a zipWithNext: deltas, gaps, is-it-sorted. Losing exactly one element is the shape of the answer, not a bug in it.",
+      "anotherTake": {
+        "prompt": "Did the session lengthen from each reading to the next?",
+        "answer": "readings.map { it.minutes }.zipWithNext { a, b -> b > a }",
+        "output": "[false, true, false, false, true, false, true]",
+        "from": "List<Reading>",
+        "to": "List<Boolean>",
+        "starter": "readings."
+      }
+    },
+    {
+      "id": "windowed-pairs",
+      "operator": "windowed",
+      "from": "List<Book>",
+      "to": "List<List<String>>",
+      "prompt": "Every overlapping pair of adjacent titles.",
+      "hint": "windowed slides; chunked does not.",
+      "starter": "library.",
+      "answer": "library.map { it.title }.windowed(2)",
+      "output": "[[Atlas, Borealis], [Borealis, Cartographers], [Cartographers, Driftwood], [Driftwood, Embers], [Embers, Foxfire]]   // 5 windows, each overlapping the last",
+      "steps": [
+        "The default step is 1, so each window starts one element after the last — the windows overlap.",
+        "Six titles give five pairs of two.",
+        "partialWindows defaults to false, so no one-element window is emitted at the end."
+      ],
+      "why": "windowed(2) and zipWithNext answer the same question; windowed hands you a list, zipWithNext hands the pair to a lambda. Beyond two elements, only windowed will do.",
+      "anotherTake": {
+        "prompt": "Every run of three consecutive titles.",
+        "answer": "library.map { it.title }.windowed(3)",
+        "output": "[[Atlas, Borealis, Cartographers], [Borealis, Cartographers, Driftwood], [Cartographers, Driftwood, Embers], [Driftwood, Embers, Foxfire]]   // 4 windows",
+        "from": "List<Book>",
+        "to": "List<List<String>>",
+        "starter": "library."
+      }
+    },
+    {
+      "id": "chunked-pages",
+      "operator": "chunked",
+      "from": "List<Reading>",
+      "to": "List<List<Int>>",
+      "prompt": "The reading lengths in pages of three.",
+      "hint": "These pages must not overlap, and the last one may be short.",
+      "starter": "readings.",
+      "answer": "readings.map { it.minutes }.chunked(3)",
+      "output": "[[24, 22, 25], [23, 20, 26], [24, 28]]   // the short last page is kept",
+      "steps": [
+        "chunked steps by its own size, so nothing appears in two chunks.",
+        "Eight elements give three chunks: two full and one of two.",
+        "The short tail is kept, which is the opposite of what windowed does by default."
+      ],
+      "why": "chunked is windowed(size, step = size, partialWindows = true) under a shorter name. Paging keeps the remainder; a rolling window drops it.",
+      "anotherTake": {
+        "prompt": "The titles, two to a shelf.",
+        "answer": "library.map { it.title }.chunked(2)",
+        "output": "[[Atlas, Borealis], [Cartographers, Driftwood], [Embers, Foxfire]]",
+        "from": "List<Book>",
+        "to": "List<List<String>>",
+        "starter": "library."
+      }
+    },
+    {
+      "id": "distinct",
+      "operator": "distinct",
+      "from": "List<Book>",
+      "to": "List<String>",
+      "prompt": "The distinct authors in the library.",
+      "hint": "The elements have to be authors before they can be deduped as authors.",
+      "starter": "library.",
+      "answer": "library.map { it.author }.distinct()",
+      "output": "[Marlowe, Okafor, Voss]",
+      "steps": [
+        "map first — distinct on the library itself would dedupe whole Book objects, which are all different anyway.",
+        "distinct compares with equals/hashCode, which for String is the text.",
+        "First occurrence wins and encounter order is kept, so Marlowe stays first."
+      ],
+      "why": "distinct on the wrong element type is a no-op that looks like it worked. Dedupe after the map that produces the thing you actually want unique.",
+      "anotherTake": {
+        "prompt": "The distinct chapter numbers, first-seen order.",
+        "answer": "readings.map { it.chapter }.distinct()",
+        "output": "[1, 2, 3]",
+        "from": "List<Reading>",
+        "to": "List<Int>",
+        "starter": "readings."
+      }
+    },
+    {
+      "id": "distinctBy-year",
+      "operator": "distinctBy",
+      "from": "List<Book>",
+      "to": "List<Book>",
+      "prompt": "One book per publication year — the first one seen wins.",
+      "hint": "The element type does not change, so this is not a map.",
+      "starter": "library.",
+      "answer": "library.distinctBy { it.year }",
+      "output": "[Atlas, Borealis, Cartographers, Driftwood, Foxfire]   // Embers (2021) loses to Borealis",
+      "steps": [
+        "distinctBy derives a key per element and keeps the first element for each key.",
+        "Both Borealis and Embers are 2021; Borealis appears first, so Embers is dropped.",
+        "The result is still List<Book> — the key is used for comparison only, never returned."
+      ],
+      "why": "distinctBy is groupBy followed by taking each group's first, without building the groups. Which one survives is decided by encounter order, so sort first if it matters.",
+      "anotherTake": {
+        "prompt": "One book per score — and null is a key like any other.",
+        "answer": "library.distinctBy { it.score }",
+        "output": "[Atlas, Borealis, Cartographers, Driftwood]   // Embers lost the null slot to Borealis",
+        "from": "List<Book>",
+        "to": "List<Book>",
+        "starter": "library."
+      }
+    },
+    {
+      "id": "sortedBy-year",
+      "operator": "sortedBy",
+      "from": "List<Book>",
+      "to": "List<Book>",
+      "prompt": "Oldest first.",
+      "hint": "One key, ascending. Nothing more is needed.",
+      "starter": "library.",
+      "answer": "library.sortedBy { it.year }",
+      "output": "[Cartographers, Atlas, Driftwood, Borealis, Embers, Foxfire]   // stable: Borealis stays ahead of Embers",
+      "steps": [
+        "sortedBy takes a selector returning a Comparable and sorts ascending by it.",
+        "The sort is stable, so Borealis and Embers — both 2021 — keep their original order.",
+        "A new list comes back; the receiver is untouched."
+      ],
+      "why": "Stability is what lets you sort twice for a two-key order: sort by the secondary key first, then by the primary. For anything more than that, sortedWith and a Comparator.",
+      "anotherTake": {
+        "prompt": "The readings, shortest session first.",
+        "answer": "readings.sortedBy { it.minutes }",
+        "output": "[book 4 · ch 2 · 20 min, book 1 · ch 2 · 22 min, book 4 · ch 1 · 23 min, book 1 · ch 1 · 24 min, book 6 · ch 2 · 24 min, book 3 · ch 1 · 25 min, book 6 · ch 1 · 26 min, book 6 · ch 3 · 28 min]",
+        "from": "List<Reading>",
+        "to": "List<Reading>",
+        "starter": "readings."
+      }
+    },
+    {
+      "id": "sortedBy-length",
+      "operator": "sortedBy",
+      "from": "List<Book>",
+      "to": "List<String>",
+      "prompt": "Titles, shortest first.",
+      "hint": "The selector does not have to be a field.",
+      "starter": "library.",
+      "answer": "library.map { it.title }.sortedBy { it.length }",
+      "output": "[Atlas, Embers, Foxfire, Borealis, Driftwood, Cartographers]",
+      "steps": [
+        "map to the titles first, because the result is a list of strings, not of books.",
+        "The selector returns Int, which is Comparable, so sortedBy is happy.",
+        "No two titles share a length here, so stability never comes into it."
+      ],
+      "why": "sortedBy sorts by whatever the selector returns, not by the element. Sorting strings by length and sorting them alphabetically are the same call with a different lambda.",
+      "anotherTake": {
+        "prompt": "The authors, shortest name first — duplicates kept.",
+        "answer": "library.map { it.author }.sortedBy { it.length }",
+        "output": "[Voss, Voss, Okafor, Marlowe, Marlowe, Marlowe]",
+        "from": "List<Book>",
+        "to": "List<String>",
+        "starter": "library."
+      }
+    },
+    {
+      "id": "sortedWith-author-year",
+      "operator": "sortedWith",
+      "from": "List<Book>",
+      "to": "List<Book>",
+      "prompt": "Author ascending, then newest first inside each author.",
+      "hint": "Two keys, and they run in opposite directions.",
+      "starter": "library.",
+      "answer": "library.sortedWith(\n    compareBy<Book> { it.author }.thenByDescending { it.year }\n)",
+      "output": "[Embers, Atlas, Cartographers, Borealis, Foxfire, Driftwood]   // Marlowe newest-first, then Okafor, then Voss",
+      "steps": [
+        "Two keys in different directions cannot be expressed with sortedBy, which is what makes this a Comparator.",
+        "compareBy needs the type argument, because there is nothing else in the expression to infer Book from.",
+        "thenByDescending only breaks ties — it never reorders books from different authors."
+      ],
+      "why": "compareBy/thenBy reads in the order a person would say it out loud, which is why it beats a hand-written compare. The explicit type argument on the first call is the price.",
+      "anotherTake": {
+        "prompt": "Readings by book, longest first inside each.",
+        "answer": "readings.sortedWith(\n    compareBy<Reading> { it.bookId }.thenByDescending { it.minutes }\n)",
+        "output": "[book 1 · ch 1 · 24 min, book 1 · ch 2 · 22 min, book 3 · ch 1 · 25 min, book 4 · ch 1 · 23 min, book 4 · ch 2 · 20 min, book 6 · ch 3 · 28 min, book 6 · ch 1 · 26 min, book 6 · ch 2 · 24 min]",
+        "from": "List<Reading>",
+        "to": "List<Reading>",
+        "starter": "readings."
+      }
+    },
+    {
+      "id": "maxByOrNull-reading",
+      "operator": "maxByOrNull",
+      "from": "List<Reading>",
+      "to": "Reading?",
+      "prompt": "The single longest reading.",
+      "hint": "What comes back — the number, or the thing that had it?",
+      "starter": "readings.",
+      "answer": "readings.maxByOrNull { it.minutes }",
+      "output": "book 6 · ch 3 · 28 min",
+      "steps": [
+        "maxByOrNull returns the element, not the value the selector produced — that is maxOf.",
+        "Ties would go to the first element, though there is no tie here.",
+        "Nullable because an empty list has no maximum, and that is a value rather than an exception."
+      ],
+      "why": "maxBy without the suffix was removed in 1.4 precisely because it threw on empty. The nullable return is the API telling you about a case you have to answer for.",
+      "anotherTake": {
+        "prompt": "The book with the most genre tags.",
+        "answer": "library.maxByOrNull { it.genres.size }",
+        "output": "Atlas           // ties go to the first seen",
+        "from": "List<Book>",
+        "to": "Book?",
+        "starter": "library."
+      }
+    },
+    {
+      "id": "minByOrNull-genres",
+      "operator": "minByOrNull",
+      "from": "List<Book>",
+      "to": "Book?",
+      "prompt": "The book with the fewest genres.",
+      "hint": "The mirror of maxByOrNull, and it returns the same kind of thing.",
+      "starter": "library.",
+      "answer": "library.minByOrNull { it.genres.size }",
+      "output": "Borealis       // the only book with a single genre",
+      "steps": [
+        "The selector returns the count; minByOrNull compares those and returns the element.",
+        "Borealis is the only one with a single genre.",
+        "Null on an empty list, exactly as the maximum is."
+      ],
+      "why": "minByOrNull and maxByOrNull are the same function with the comparison flipped. If you find yourself sorting a whole list to read one end of it, this is the call you wanted.",
+      "anotherTake": {
+        "prompt": "The shortest session logged.",
+        "answer": "readings.minByOrNull { it.minutes }",
+        "output": "book 4 · ch 2 · 20 min",
+        "from": "List<Reading>",
+        "to": "Reading?",
+        "starter": "readings."
+      }
+    },
+    {
+      "id": "sumOf-genres",
+      "operator": "sumOf",
+      "from": "List<Book>",
+      "to": "Int",
+      "prompt": "How many genre tags there are in total, duplicates included.",
+      "hint": "The lambda's return type picks the overload.",
+      "starter": "library.",
+      "answer": "library.sumOf { it.genres.size }",
+      "output": "10              // 2+1+2+2+1+2",
+      "steps": [
+        "sumOf runs the selector per element and adds the results; nothing intermediate is built.",
+        "The lambda returns Int, so the Int overload is chosen — returning a Double would pick a different one.",
+        "Ten tags across six books, which is why flatMap { it.genres } produced ten elements."
+      ],
+      "why": "sumOf replaced sumBy and sumByDouble, whose overloads could not be resolved cleanly. The return type of the lambda is now the only thing that decides.",
+      "anotherTake": {
+        "prompt": "The combined length of all six titles, in characters.",
+        "answer": "library.sumOf { it.title.length }",
+        "output": "48",
+        "from": "List<Book>",
+        "to": "Int",
+        "starter": "library."
+      }
+    },
+    {
+      "id": "sumOf-filtered",
+      "operator": "sumOf",
+      "from": "List<Reading>",
+      "to": "Int",
+      "prompt": "Total minutes read for book 6.",
+      "hint": "Narrow first, then total.",
+      "starter": "readings.",
+      "answer": "readings.filter { it.bookId == 6 }.sumOf { it.minutes }",
+      "output": "78",
+      "steps": [
+        "filter narrows to the three readings for that book; the type is still List<Reading>.",
+        "sumOf then adds the minutes across exactly those.",
+        "One intermediate list is built. On eight elements that is free; inside a loop over every book it is the thing to notice."
+      ],
+      "why": "filter-then-sumOf is the readable form and allocates one list. sumOf with a conditional inside allocates nothing and reads worse — take the list until profiling says otherwise.",
+      "anotherTake": {
+        "prompt": "Minutes spent on Marlowe's books.",
+        "answer": "readings.filter { r -> library.first { it.id == r.bookId }.author == \"Marlowe\" }\n    .sumOf { it.minutes }",
+        "output": "71              // Atlas 46 + Cartographers 25; Embers unread",
+        "from": "List<Reading>",
+        "to": "Int",
+        "starter": "readings."
+      }
+    },
+    {
+      "id": "count",
+      "operator": "count",
+      "from": "List<Book>",
+      "to": "Int",
+      "prompt": "How many books are unrated.",
+      "hint": "You want the size of the matching subset, not the subset.",
+      "starter": "library.",
+      "answer": "library.count { it.score == null }",
+      "output": "2               // Borealis and Embers",
+      "steps": [
+        "count with a predicate walks the list once and adds up the matches.",
+        "No intermediate list is created, which is the whole difference from filter().size.",
+        "Two books have a null score."
+      ],
+      "why": "filter { }.size and count { } give the same number; only one of them allocates a list to throw away. Reach for count whenever the list itself is not wanted.",
+      "anotherTake": {
+        "prompt": "How many books carry the Thriller tag.",
+        "answer": "library.count { \"Thriller\" in it.genres }",
+        "output": "3",
+        "from": "List<Book>",
+        "to": "Int",
+        "starter": "library."
+      }
+    },
+    {
+      "id": "count-threshold",
+      "operator": "count",
+      "from": "List<Reading>",
+      "to": "Int",
+      "prompt": "How many readings ran 24 minutes or longer.",
+      "hint": "Same operator, arithmetic predicate.",
+      "starter": "readings.",
+      "answer": "readings.count { it.minutes >= 24 }",
+      "output": "5               // of 8 readings",
+      "steps": [
+        "The predicate is evaluated once per reading and the trues are tallied.",
+        "Five of the eight qualify.",
+        "count() with no lambda would return 8 — the size of the whole list."
+      ],
+      "why": "count has two overloads and they answer different questions. The one with no arguments is just size under another name.",
+      "anotherTake": {
+        "prompt": "How many books arrived after 2019.",
+        "answer": "library.count { it.year > 2019 }",
+        "output": "4",
+        "from": "List<Book>",
+        "to": "Int",
+        "starter": "library."
+      }
+    },
+    {
+      "id": "any",
+      "operator": "any",
+      "from": "List<Book>",
+      "to": "Boolean",
+      "prompt": "Is there anything from 2023 in the library?",
+      "hint": "This can stop early. Which operator is allowed to?",
+      "starter": "library.",
+      "answer": "library.any { it.year == 2023 }",
+      "output": "true            // Foxfire",
+      "steps": [
+        "any returns true at the first element that matches and stops looking.",
+        "Foxfire is the last element, so this particular call does walk the whole list.",
+        "any() with no predicate is \"is this not empty\"."
+      ],
+      "why": "any short-circuits, which matters when the predicate is expensive or the list is long. On an empty list it is false — there is nothing to be true about.",
+      "anotherTake": {
+        "prompt": "Did any session pass the half-hour?",
+        "answer": "readings.any { it.minutes > 30 }",
+        "output": "false           // the longest is 28",
+        "from": "List<Reading>",
+        "to": "Boolean",
+        "starter": "readings."
+      }
+    },
+    {
+      "id": "all-genres",
+      "operator": "all",
+      "from": "List<Book>",
+      "to": "Boolean",
+      "prompt": "Is every book tagged with at least one genre?",
+      "hint": "Careful with what this returns for an empty list.",
+      "starter": "library.",
+      "answer": "library.all { it.genres.isNotEmpty() }",
+      "output": "true            // and true for an empty library too",
+      "steps": [
+        "all stops at the first element that fails, and returns true only if none does.",
+        "Every book here carries at least one genre.",
+        "An empty library would also return true — vacuous truth, and the usual source of surprise."
+      ],
+      "why": "all on an empty collection is true and none on an empty collection is also true. When emptiness is meaningful, check it yourself before asking.",
+      "anotherTake": {
+        "prompt": "Did every session run at least twenty minutes?",
+        "answer": "readings.all { it.minutes >= 20 }",
+        "output": "true",
+        "from": "List<Reading>",
+        "to": "Boolean",
+        "starter": "readings."
+      }
+    },
+    {
+      "id": "none-author",
+      "operator": "none",
+      "from": "List<Book>",
+      "to": "Boolean",
+      "prompt": "Confirm there is no Voss title from before 2020.",
+      "hint": "Two conditions, one predicate, and the answer is the absence of a match.",
+      "starter": "library.",
+      "answer": "library.none { it.author == \"Voss\" && it.year < 2020 }",
+      "output": "true            // Driftwood is 2020, Foxfire 2023",
+      "steps": [
+        "none is all with the predicate negated, and it short-circuits the same way.",
+        "Driftwood is 2020 and Foxfire 2023, so nothing matches and the answer is true.",
+        "!any { } says the same thing; none reads as the sentence you would speak."
+      ],
+      "why": "none, any and all are the same walk with different exit conditions. Choosing the one that matches the sentence in the ticket is what keeps the predicate from being negated twice.",
+      "anotherTake": {
+        "prompt": "Confirm nobody has logged a fourth chapter.",
+        "answer": "readings.none { it.chapter >= 4 }",
+        "output": "true",
+        "from": "List<Reading>",
+        "to": "Boolean",
+        "starter": "readings."
+      }
+    },
+    {
+      "id": "first",
+      "operator": "first",
+      "from": "List<Book>",
+      "to": "Book",
+      "prompt": "The first Marlowe title in the library.",
+      "hint": "This one throws rather than returning null.",
+      "starter": "library.",
+      "answer": "library.first { it.author == \"Marlowe\" }",
+      "output": "Atlas           // index 0, so nothing else was examined",
+      "steps": [
+        "first with a predicate returns the earliest matching element and stops there.",
+        "Atlas is at index 0 and matches, so nothing else is examined.",
+        "If nothing matched, this would throw NoSuchElementException rather than return null."
+      ],
+      "why": "first is the right call when a missing match is a bug you want to hear about immediately. When it is an ordinary outcome, it is firstOrNull.",
+      "anotherTake": {
+        "prompt": "The first session that broke 25 minutes.",
+        "answer": "readings.first { it.minutes > 25 }",
+        "output": "book 6 · ch 1 · 26 min",
+        "from": "List<Reading>",
+        "to": "Reading",
+        "starter": "readings."
+      }
+    },
+    {
+      "id": "firstOrNull",
+      "operator": "firstOrNull",
+      "from": "List<Book>",
+      "to": "Book?",
+      "prompt": "The first book scored 10, or null if there is none.",
+      "hint": "Nothing in the library scores 10. What should come back?",
+      "starter": "library.",
+      "answer": "library.firstOrNull { it.score == 10 }",
+      "output": "null            // nothing in the library scores 10",
+      "steps": [
+        "firstOrNull walks until the predicate matches, and returns null if it never does.",
+        "No book scores 10, so the whole list is examined and null comes back.",
+        "The return type is Book?, which forces the caller to handle the miss."
+      ],
+      "why": "The OrNull suffix moves \"it might not be there\" from the runtime into the type. That is the entire difference, and it is the reason first should be rare.",
+      "anotherTake": {
+        "prompt": "The first book from 2021, or null — this time there is one.",
+        "answer": "library.firstOrNull { it.year == 2021 }",
+        "output": "Borealis",
+        "from": "List<Book>",
+        "to": "Book?",
+        "starter": "library."
+      }
+    },
+    {
+      "id": "average",
+      "operator": "average",
+      "from": "List<Reading>",
+      "to": "Double",
+      "prompt": "The average length of a reading session.",
+      "hint": "average is defined on numbers, not on Reading.",
+      "starter": "readings.",
+      "answer": "readings.map { it.minutes }.average()",
+      "output": "24.0            // Double, from a List<Int>",
+      "steps": [
+        "map to the minutes first: average has no overload for an arbitrary element type.",
+        "It returns Double even for a list of Ints, because the mean of integers usually is not one.",
+        "192 minutes across 8 readings."
+      ],
+      "why": "average returns NaN on an empty list rather than throwing, and NaN != NaN, so it survives every comparison you write to catch it. Check isEmpty first.",
+      "anotherTake": {
+        "prompt": "The average chapter number reached.",
+        "answer": "readings.map { it.chapter }.average()",
+        "output": "1.625           // a Double again",
+        "from": "List<Reading>",
+        "to": "Double",
+        "starter": "readings."
+      }
+    },
+    {
+      "id": "take",
+      "operator": "take",
+      "from": "List<Book>",
+      "to": "List<String>",
+      "prompt": "The titles of the three oldest books.",
+      "hint": "Order first. take does not sort anything.",
+      "starter": "library.",
+      "answer": "library.sortedBy { it.year }.take(3).map { it.title }",
+      "output": "[Cartographers, Atlas, Driftwood]   // sorted, then taken, then mapped",
+      "steps": [
+        "take is a prefix of the list as it currently stands, so the sort has to come first.",
+        "Three elements are kept and the rest discarded.",
+        "map last, so the sort compares years rather than strings."
+      ],
+      "why": "take never throws — asking for more than there is returns everything. The order of sortedBy, take and map is the whole answer here; any other order answers a different question.",
+      "anotherTake": {
+        "prompt": "The first two readings, as logged.",
+        "answer": "readings.take(2)",
+        "output": "[book 1 · ch 1 · 24 min, book 1 · ch 2 · 22 min]",
+        "from": "List<Reading>",
+        "to": "List<Reading>",
+        "starter": "readings."
+      }
+    },
+    {
+      "id": "drop",
+      "operator": "drop",
+      "from": "List<Reading>",
+      "to": "List<Int>",
+      "prompt": "Every reading except the first two, as minutes.",
+      "hint": "The mirror of take.",
+      "starter": "readings.",
+      "answer": "readings.drop(2).map { it.minutes }",
+      "output": "[25, 23, 20, 26, 24, 28]",
+      "steps": [
+        "drop skips a prefix and keeps the rest, in order.",
+        "Six of the eight readings survive.",
+        "Dropping more than the list holds returns an empty list rather than throwing."
+      ],
+      "why": "take and drop are complements: take(n) + drop(n) reassembles the original list. Neither one ever fails on a short list, which is what makes them safe for paging.",
+      "anotherTake": {
+        "prompt": "The last two titles — drop the first four.",
+        "answer": "library.map { it.title }.drop(4)",
+        "output": "[Embers, Foxfire]",
+        "from": "List<Book>",
+        "to": "List<String>",
+        "starter": "library."
+      }
+    },
+    {
+      "id": "asSequence-lazy-first",
+      "operator": "asSequence",
+      "from": "List<Book>",
+      "to": "String",
+      "prompt": "The first book with two or more genres — without filtering the whole library.",
+      "hint": "On a List, how many elements does filter examine before first sees anything?",
+      "starter": "library.",
+      "answer": "library.asSequence()\n    .filter { it.genres.size >= 2 }\n    .map { it.title }\n    .first()",
+      "output": "Atlas           // filter and map each ran exactly once",
+      "steps": [
+        "asSequence makes the chain lazy: each element flows all the way through before the next one starts.",
+        "Atlas matches immediately, so filter ran once and map ran once.",
+        "On a List, filter would have examined all six and allocated a list before first was reached."
+      ],
+      "why": "Sequences pay off on long chains and early exits. On six elements the wrapper costs more than it saves — the reason to write this one is to know which of the two you are choosing.",
+      "anotherTake": {
+        "prompt": "The first session longer than 25 minutes — lazily.",
+        "answer": "readings.asSequence()\n    .map { it.minutes }\n    .first { it > 25 }",
+        "output": "26              // the map ran six times, not eight",
+        "from": "List<Reading>",
+        "to": "Int",
+        "starter": "readings."
+      }
+    }
+  ]
+}
