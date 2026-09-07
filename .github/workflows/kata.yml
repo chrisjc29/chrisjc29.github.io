@@ -1,0 +1,144 @@
+# Builds Kata's browser app from its private source repository and publishes it under Kata/,
+# served at https://chrisjc29.github.io/Kata/.
+#
+# The build runs here, in the public site repository, rather than in chrisjc29/KataApp: this
+# repository's standard-runner minutes are free, and the private repository's are metered. The
+# source is read through a deploy key that grants read-only access to chrisjc29/KataApp and nothing
+# else, stored here as KATA_SOURCE_KEY. The output is committed back with the workflow's own token,
+# and a push to main is what makes Pages rebuild the site.
+#
+# What is published is compiled, not readable. Kotlin/Wasm's production build runs through
+# Binaryen and leaves no name section — every function is an unnamed index, no Kotlin identifier
+# survives, and the string literals are not stored as plain text; Skiko ships the same way, and
+# webpack minifies the loader. KataApp's build file turns the production source map off, and the
+# guard step below deletes any map that appears and fails the run if a Wasm file ever carries a
+# name section again, so a toolchain upgrade cannot quietly start publishing something readable.
+# What that does not do is hide the app: a browser can only run what it has downloaded, and the
+# deck is served as plain JSON because the app reads it at runtime. Stripped Wasm is as far as a
+# client-side app can go.
+#
+# Only Kata/ is touched. Every other app's folder, and the site root, is left exactly as it was.
+name: Build and publish Kata
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: The KataApp branch, tag or commit to build
+        default: main
+        required: true
+  # KataApp can trigger a publish with a repository_dispatch of this type, if it ever wants to.
+  repository_dispatch:
+    types: [kata-publish]
+
+permissions:
+  contents: write
+
+env:
+  GRADLE_OPTS: -Dorg.gradle.daemon=false
+  SITE_PATH: Kata
+  DIST: source/composeApp/build/dist/wasmJs/productionExecutable
+
+# Never cancel a publish in flight: a half-replaced site is worse than a stale one.
+concurrency:
+  group: pages-kata
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Check out the site
+        uses: actions/checkout@v4
+
+      - name: Check out the Kata source
+        uses: actions/checkout@v4
+        with:
+          repository: chrisjc29/KataApp
+          ref: ${{ github.event.inputs.ref || 'main' }}
+          ssh-key: ${{ secrets.KATA_SOURCE_KEY }}
+          path: source
+
+      - uses: gradle/actions/wrapper-validation@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build the static site
+        working-directory: source
+        run: ./gradlew :composeApp:wasmJsBrowserDistribution
+
+      # The distribution is checked, not trusted. A source map or a Wasm name section would hand
+      # a reader the structure of the app, and both are one toolchain default away from coming
+      # back. The map is deleted rather than merely reported, since the file is worthless to the
+      # site; a name section cannot be fixed here and fails the run.
+      - name: Check nothing readable is going out
+        run: |
+          set -euo pipefail
+          find "$DIST" -name '*.map' -print -delete
+          python3 - "$DIST" <<'EOF'
+          import pathlib, sys
+          bad = False
+          for path in pathlib.Path(sys.argv[1]).rglob("*.wasm"):
+              data = path.read_bytes()
+              i = 8
+              def leb(p):
+                  r = s = 0
+                  while True:
+                      b = data[p]; p += 1; r |= (b & 0x7F) << s; s += 7
+                      if not b & 0x80: return r, p
+              while i < len(data):
+                  sid = data[i]; i += 1
+                  size, i = leb(i)
+                  if sid == 0:
+                      n, p = leb(i)
+                      name = data[p:p + n].decode("utf8", "replace")
+                      if name in ("name", "producers") or name.startswith(".debug"):
+                          print(f"::error::{path.name} carries a '{name}' section, which names its code.")
+                          bad = True
+                  i += size
+              print(f"{path.name}: {len(data)} bytes, no name section")
+          sys.exit(1 if bad else 0)
+          EOF
+
+      - name: Publish the build
+        run: |
+          set -euo pipefail
+          source_sha=$(git -C source rev-parse HEAD)
+
+          # Replaced wholesale, so a file gone from the build is gone from the site — the Wasm
+          # files are content-hashed and every publish would otherwise leave the last one behind.
+          rm -rf "$SITE_PATH"
+          cp -R "$DIST" "$SITE_PATH"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A "$SITE_PATH"
+
+          if git diff --cached --quiet; then
+            echo "The published site already matches chrisjc29/KataApp@${source_sha}. Nothing to push."
+            exit 0
+          fi
+
+          git commit -m "${SITE_PATH}: publish the browser build from chrisjc29/KataApp@${source_sha}"
+
+          # Retries because the usual cause of a failed push is a transient fault, or main moving
+          # under us while another app publishes its own folder.
+          for delay in 2 4 8 16 0; do
+            if git push origin HEAD:main; then
+              echo "Published to https://chrisjc29.github.io/${SITE_PATH}/"
+              exit 0
+            fi
+            [ "$delay" -eq 0 ] && break
+            echo "Push failed, retrying in ${delay}s."
+            sleep "$delay"
+            git pull --rebase origin main || true
+          done
+
+          echo "::error::Could not push. The published site is now stale."
+          exit 1
