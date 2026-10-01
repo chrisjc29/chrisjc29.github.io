@@ -1,0 +1,13 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.aninoti.app",
+      "sha256_cert_fingerprints": [
+        "REPLACE_WITH_PLAY_APP_SIGNING_KEY_SHA256_FROM_PLAY_CONSOLE_SETUP_APP_SIGNING",
+        "0A:B3:85:C6:6D:C5:D0:80:08:D9:3D:E8:C1:80:E0:E4:F8:53:76:24:57:04:91:EF:A7:6F:60:1D:65:23:DB:6C"
+      ]
+    }
+  }
+]

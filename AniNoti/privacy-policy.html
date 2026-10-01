@@ -10,13 +10,13 @@
 <main>
 
 <h1>AniNoti privacy policy</h1>
-<p class="updated">Last updated 21 August 2026</p>
+<p class="updated">Last updated 30 September 2026</p>
 
 <div class="card">
   <p><strong>The short version.</strong> AniNoti has no accounts and no sign-in. The series you
   follow, the searches you run and your reminder settings are stored on your phone, not on our
-  servers. The Android version collects anonymous usage and crash statistics to find and fix bugs;
-  the iOS version collects nothing of its own. The app carries ads, and Google's ad system uses your
+  servers. On both Android and iOS the app collects anonymous usage and crash statistics to find
+  and fix bugs. The app carries ads, and Google's ad system uses your
   device's advertising identifier to choose them — that is the one thing here that follows you
   between apps, it is covered in full below, and nothing about what you do in AniNoti is used to
   pick an ad. We do not sell your data.</p>
@@ -55,13 +55,13 @@ to us — where you paste it from there is up to you.</p>
 <h2>What we collect</h2>
 
 <div class="card">
-  <p><strong>Analytics and crash reporting are Android only.</strong> The iOS build has no analytics
-  or crash SDK linked into it. <strong>Advertising applies to both.</strong> AniNoti shows ads on
-  iPhone and Android alike, and that is covered in its own section below.</p>
+  <p><strong>Analytics, crash reporting and advertising apply to both platforms.</strong> The
+  Android and iOS apps share one crash-reporting and analytics library, and both show ads; the ads
+  are covered in their own section below.</p>
 </div>
 
-<p>The Android build uses Google Firebase for anonymous analytics and crash reporting. This is what
-it collects and why.</p>
+<p>Both apps use <a href="https://kotzilla.io">Kotzilla</a> for anonymous analytics and crash
+reporting. This is what it collects and why.</p>
 
 <table>
   <tr><th>Data</th><th>Why</th></tr>
@@ -78,9 +78,8 @@ it collects and why.</p>
     <td>To find and fix crashes</td>
   </tr>
   <tr>
-    <td>A randomly generated app-instance identifier, plus approximate country derived from your IP
-    address</td>
-    <td>Assigned by Firebase so that events from one install can be counted once. It is reset when
+    <td>A randomly generated app-instance identifier</td>
+    <td>Assigned by Kotzilla so that events from one install can be counted once. It is reset when
     you reinstall the app and is not linked to you</td>
   </tr>
 </table>
@@ -89,14 +88,14 @@ it collects and why.</p>
 address, phone number or location, and there is no account to attach anything to. The advertising
 identifier is a separate matter, covered in the advertising section below.</p>
 
-<p>Firebase processes this data on our behalf as described in the
-<a href="https://firebase.google.com/support/privacy">Firebase privacy documentation</a>. Analytics
-data is retained by Firebase for up to 14 months; crash reports for up to 90 days.</p>
+<p>Kotzilla processes this data on our behalf under its own privacy policy, published at
+<a href="https://kotzilla.io">kotzilla.io</a>. Crash and performance
+data is declared on the App Store privacy label as collected but not linked to you and not used for
+tracking, which is also what the Play Data safety form says.</p>
 
 <h3>Turning it off</h3>
-<p>On Android you can stop analytics collection at the OS level by revoking the app's usage-data
-sharing in <em>Settings → Google → Ads / Usage &amp; diagnostics</em>. Uninstalling the app stops all
-collection and deletes everything held on the device.</p>
+<p>There is no in-app switch for it. Uninstalling the app stops all collection and deletes everything
+held on the device.</p>
 
 
 <h2>Advertising</h2>

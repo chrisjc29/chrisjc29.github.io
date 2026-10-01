@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>AniNoti — Open a series</title>
+<link rel="stylesheet" href="../aninoti.css">
+<style>
+  /* Only what this page adds to aninoti.css, in the same tokens. */
+  .actions { display: flex; flex-direction: column; gap: 12px; margin: 24px 0 8px; max-width: 360px; }
+  .button {
+    display: block;
+    padding: 14px 18px;
+    border-radius: 20px;
+    text-align: center;
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .button.primary { background: var(--primary); color: var(--on-primary); }
+  .button.secondary { border: 1px solid var(--outline); color: var(--heading); background: var(--surface); }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+
+<h1>AniNoti</h1>
+<p class="lede" id="lede">Someone shared a series with you.</p>
+
+<!-- The page is a hand-off, not a series page: it knows only the id in its own address, so it
+     names nothing about the series and sends no request anywhere. With the app installed a
+     verified App Link or Universal Link never reaches this page at all; this is what a browser
+     shows when the link was opened somewhere that did not hand it to the app, or when the app is
+     not installed. See docs/links.md. -->
+
+<div class="actions" id="open-actions" hidden>
+  <a class="button primary" id="open-in-app" href="aninoti://">Open in AniNoti</a>
+</div>
+
+<div id="get-app" hidden>
+  <p>Don't have AniNoti yet? It is free: follow a series and get a reminder the moment each new
+  episode lands.</p>
+  <div class="actions">
+    <a class="button secondary" href="https://play.google.com/store/apps/details?id=com.aninoti.app">Get it on Google Play</a>
+    <a class="button secondary" href="https://testflight.apple.com/join/qW9jaDqD">Get the iPhone beta on TestFlight</a>
+  </div>
+  <p>Once it is installed, come back and open the link again.</p>
+</div>
+
+<footer>
+  <p><a href="../">AniNoti support</a> · <a href="../privacy-policy.html">Privacy policy</a></p>
+</footer>
+
+</main>
+<script>
+  // Everything this page does, inline: no external script, no request, no tracker. It reads the
+  // series id from its own address, points the button at the app's own scheme, and on Android
+  // tries that scheme once before offering the stores.
+  (function () {
+    var id = new URLSearchParams(window.location.search).get("id");
+    var valid = id !== null && /^-?[0-9]{1,10}$/.test(id) && Number(id) !== 0;
+    var getApp = document.getElementById("get-app");
+
+    if (!valid) {
+      document.getElementById("lede").textContent =
+        "This link does not name a series. AniNoti can still tell you when new episodes air.";
+      getApp.hidden = false;
+      return;
+    }
+
+    var schemeUrl = "aninoti://series?id=" + encodeURIComponent(id);
+    document.getElementById("open-in-app").href = schemeUrl;
+    document.getElementById("open-actions").hidden = false;
+
+    // iOS Safari answers an unregistered scheme with a modal "address is invalid" alert, which is
+    // the worst possible first sight of the app for someone who does not have it - so on iOS the
+    // scheme is only ever tried from the button. Everywhere else a failed attempt is silent.
+    var isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    if (!isIos) {
+      window.location.href = schemeUrl;
+    }
+
+    // Shown after a beat rather than at once: when the app opens, the page is left behind before
+    // this fires, and when it does not, the stores appear without a second tap.
+    window.setTimeout(function () { getApp.hidden = false; }, 1500);
+  })();
+</script>
+</body>
+</html>

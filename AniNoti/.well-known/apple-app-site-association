@@ -1,0 +1,15 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["2WTSKKJPMG.com.aninoti.app"],
+        "components": [
+          { "/": "/AniNoti/series/*", "comment": "GitHub Pages: the landing page under the repository path" },
+          { "/": "/AniNoti/series", "comment": "the same page without its trailing slash" },
+          { "/": "/series/*", "comment": "aninoti.app, once it serves the site at its root" },
+          { "/": "/series", "comment": "the same page without its trailing slash" }
+        ]
+      }
+    ]
+  }
+}
