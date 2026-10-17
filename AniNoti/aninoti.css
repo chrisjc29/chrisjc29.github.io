@@ -1,4 +1,4 @@
-/* Direction B, the same token values as composeApp/.../theme/AppColors.kt and Theme.kt.
+/* Direction B, the same token values as androidApp/.../theme/AppColors.kt and Theme.kt.
    Shared by every page under docs/ so the support site and the app read as one thing. */
 :root {
   --background: #0D0B14;
