@@ -66,6 +66,19 @@ th { color: var(--heading); font-weight: 600; }
 
 .lede { font-size: 18px; color: var(--heading); margin-bottom: 32px; }
 
+/* The store block: series/ and get/ both draw it, so it is defined once here. */
+.actions { display: flex; flex-direction: column; gap: 12px; margin: 24px 0 8px; max-width: 360px; }
+.button {
+  display: block;
+  padding: 14px 18px;
+  border-radius: 20px;
+  text-align: center;
+  font-weight: 700;
+  text-decoration: none;
+}
+.button.primary { background: var(--primary); color: var(--on-primary); }
+.button.secondary { border: 1px solid var(--outline); color: var(--heading); background: var(--surface); }
+
 footer {
   margin-top: 56px;
   padding-top: 20px;
