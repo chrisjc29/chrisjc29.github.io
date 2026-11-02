@@ -1,0 +1,4 @@
+# .well-known is a dot-directory, which Jekyll drops from the published site unless it is listed
+# here. It carries the App Links / Universal Links verification files for AniNoti.
+include:
+  - .well-known

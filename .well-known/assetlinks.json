@@ -1,0 +1,13 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.aninoti.app",
+      "sha256_cert_fingerprints": [
+        "01:A8:43:1D:17:96:77:51:CA:94:E9:A6:66:EF:41:79:6E:13:4A:60:65:C6:22:61:D4:7F:AC:EA:C8:18:86:05",
+        "0A:B3:85:C6:6D:C5:D0:80:08:D9:3D:E8:C1:80:E0:E4:F8:53:76:24:57:04:91:EF:A7:6F:60:1D:65:23:DB:6C"
+      ]
+    }
+  }
+]
