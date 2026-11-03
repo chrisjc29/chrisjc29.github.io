@@ -1,0 +1,61 @@
+/* MDS's handoff tokens: deep teal ink on a cool paper ground, with the amber kept to the
+   text-safe #9A5D0B. Shared by every page under MDS/ so the site and the app read as one thing. */
+:root {
+  --background: #F2F5F6;
+  --surface: #FFFFFF;
+  --heading: #0F3D46;
+  --body: #2B3A3F;
+  --muted: #5B6B70;
+  --accent: #9A5D0B;
+  --outline: rgba(15, 61, 70, 0.10);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 48px 20px 96px;
+  background: var(--background);
+  color: var(--body);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.65;
+}
+
+main { max-width: 720px; margin: 0 auto; }
+
+.site {
+  font: 600 11px/1 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+h1 { color: var(--heading); font-size: 32px; line-height: 1.15; margin: 0 0 4px; font-weight: 800; }
+
+h2 {
+  color: var(--heading);
+  font: 600 12px/1.2 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 40px 0 10px;
+}
+
+p, li { margin: 0 0 12px; }
+ul { padding-left: 20px; }
+a { color: var(--heading); }
+strong { color: var(--heading); font-weight: 600; }
+
+.updated { color: var(--muted); font-size: 14px; margin-bottom: 40px; }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--outline);
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin: 20px 0;
+}
+.card p:last-child { margin-bottom: 0; }
+
+footer { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--outline); font-size: 14px; color: var(--muted); }
