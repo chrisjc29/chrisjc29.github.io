@@ -42,6 +42,8 @@ h2 {
   margin: 40px 0 10px;
 }
 
+h3 { color: var(--heading); font-size: 17px; margin: 26px 0 6px; font-weight: 700; }
+
 p, li { margin: 0 0 12px; }
 ul { padding-left: 20px; }
 a { color: var(--heading); }
@@ -57,5 +59,7 @@ strong { color: var(--heading); font-weight: 600; }
   margin: 20px 0;
 }
 .card p:last-child { margin-bottom: 0; }
+
+.lede { font-size: 18px; color: var(--heading); margin-bottom: 32px; }
 
 footer { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--outline); font-size: 14px; color: var(--muted); }
