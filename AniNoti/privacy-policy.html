@@ -10,13 +10,14 @@
 <main>
 
 <h1>AniNoti privacy policy</h1>
-<p class="updated">Last updated 4 November 2026</p>
+<p class="updated">Last updated 25 November 2026</p>
 
 <div class="card">
   <p><strong>The short version.</strong> AniNoti has no accounts and no sign-in. The series you
   follow, the searches you run and your reminder settings are stored on your phone, not on our
   servers. On both Android and iOS the app collects anonymous usage and crash statistics to find
-  and fix bugs. The app carries ads, and Google's ad system uses your
+  and fix bugs; on Android the usage statistics go to Google Analytics, and only as far as you
+  have agreed. The app carries ads, and Google's ad system uses your
   device's advertising identifier to choose them — that is the one thing here that follows you
   between apps, it is covered in full below, and nothing about what you do in AniNoti is used to
   pick an ad. If you buy <em>Remove ads</em>, a purchase service keeps a record that this install
@@ -58,12 +59,13 @@ to us — where you paste it from there is up to you.</p>
 
 <div class="card">
   <p><strong>Analytics, crash reporting and advertising apply to both platforms.</strong> The
-  Android and iOS apps share one crash-reporting and analytics library, and both show ads; the ads
-  are covered in their own section below.</p>
+  Android app uses Google's Firebase for analytics and crash reporting and the iOS app uses
+  Kotzilla. Both show ads; the ads are covered in their own section below.</p>
 </div>
 
-<p>Both apps use <a href="https://kotzilla.io">Kotzilla</a> for anonymous analytics and crash
-reporting. This is what it collects and why.</p>
+<p>The Android app uses <a href="https://firebase.google.com/support/privacy">Google Analytics for
+Firebase and Firebase Crashlytics</a>. The iOS app uses <a href="https://kotzilla.io">Kotzilla</a>.
+This is what they collect and why.</p>
 
 <table>
   <tr><th>Data</th><th>Why</th></tr>
@@ -81,8 +83,14 @@ reporting. This is what it collects and why.</p>
   </tr>
   <tr>
     <td>A randomly generated app-instance identifier</td>
-    <td>Assigned by Kotzilla so that events from one install can be counted once. It is reset when
-    you reinstall the app and is not linked to you</td>
+    <td>Assigned by the analytics or crash-reporting service so that events from one install can be
+    counted once. It is reset when you reinstall the app and is not linked to you</td>
+  </tr>
+  <tr>
+    <td>On Android, that the app was installed and first opened, together with the advertising
+    identifier — <strong>only if you agreed to it in the consent form</strong></td>
+    <td>So that we can tell whether one of our own adverts for AniNoti led to an install. Nothing
+    else you do in the app is passed on for advertising</td>
   </tr>
 </table>
 
@@ -90,14 +98,25 @@ reporting. This is what it collects and why.</p>
 address, phone number or location, and there is no account to attach anything to. The advertising
 identifier is a separate matter, covered in the advertising section below.</p>
 
-<p>Kotzilla processes this data on our behalf under its own privacy policy, published at
-<a href="https://kotzilla.io">kotzilla.io</a>. Crash and performance
+<p>Google processes the Android data on our behalf under the
+<a href="https://firebase.google.com/terms/data-processing-terms">Firebase data processing
+terms</a>, and Kotzilla processes the iOS data on our behalf under its own privacy policy, published
+at <a href="https://kotzilla.io">kotzilla.io</a>. Google works out a rough region from the IP
+address a report arrives from and does not keep the address. Crash and performance
 data is declared on the App Store privacy label as collected but not linked to you and not used for
 tracking, which is also what the Play Data safety form says.</p>
 
+<h3>Your choice on Android</h3>
+<p>Google Analytics follows the same consent form as the ads. Until you have answered it, and if you
+decline it, the Android app keeps no analytics identifier on your device and reports nothing that
+can be tied to an install. Where your country does not require consent there is no form, and
+analytics is on. <em>Settings → About → Ad privacy options</em> reopens the form wherever it
+applies. We never allow Google to use what you do in AniNoti to personalise ads, whatever you
+answer.</p>
+
 <h3>Turning it off</h3>
-<p>There is no in-app switch for it. Uninstalling the app stops all collection and deletes everything
-held on the device.</p>
+<p>Crash reporting has no in-app switch, and neither does analytics on iOS. Uninstalling the app
+stops all collection and deletes everything held on the device.</p>
 
 
 <h2>Advertising</h2>
@@ -138,10 +157,11 @@ follows you between apps</strong>. Google may combine it with data from other ap
 order to personalise what you are shown. That is what "tracking" means in Apple's App Tracking
 Transparency prompt and in the App Store privacy label, and it is why both say yes.</p>
 
-<p><strong>What is never sent.</strong> Nothing about what you do in AniNoti reaches Google's ad
-systems. Which series you follow, what you search for, what you read, when your reminders are set
-for — none of it is shared, and none of it is used to choose an ad. The ad slot knows only that it
-is a slot on a screen.</p>
+<p><strong>What is never sent.</strong> Which series you follow, what you search for, what you read,
+when your reminders are set for — none of it reaches Google's ad systems, and none of it is used to
+choose an ad. The ad slot knows only that it is a slot on a screen. The one thing Google's ad
+systems can learn from the Android app, and only with your consent, is that it was installed and
+opened, which is how an advert for AniNoti itself is measured.</p>
 
 <h3>Your choice, and how to change it</h3>
 
