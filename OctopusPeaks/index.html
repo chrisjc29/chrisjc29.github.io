@@ -186,6 +186,8 @@ tr.worst td { background: color-mix(in oklab, var(--accent) 10%, transparent); f
       </div>
     </div>
 
+    <p class="card small muted" id="note" hidden></p>
+
     <section class="tiles" id="tiles" aria-label="Summary"></section>
 
     <section class="card">
@@ -328,24 +330,37 @@ async function loadLive(creds, nDays) {
   if (!meter.ags.length) log("No tariff agreement covers this period, so prices are missing.");
 
   // Rates: one request per agreement, clipped to when that agreement applied.
-  const spans = [];
+  const spans = [], notes = [];
   for (const a of meter.ags) {
     if (a.tariff.startsWith("E-2R")) { log(`${a.tariff}: two-register (Economy 7) tariffs are not supported yet, so its prices are missing.`); continue; }
     const lo = Math.max(from, a.from), hi = Math.min(to, a.to);
     try {
-      let rows = await getAll(`${API}/products/${productCode(a.tariff)}/electricity-tariffs/${a.tariff}/standard-unit-rates/?period_from=${iso(lo)}&period_to=${iso(hi)}&page_size=1500`);
-      if (rows.some(r => r.payment_method === "DIRECT_DEBIT")) rows = rows.filter(r => !r.payment_method || r.payment_method === "DIRECT_DEBIT");
-      let n = 0;
-      for (const r of rows) {
-        const f = Math.max(Date.parse(r.valid_from), lo), t = Math.min(r.valid_to ? Date.parse(r.valid_to) : hi, hi);
-        if (f < t) { spans.push([f, t, +r.value_inc_vat]); n++; }
+      const base = `${API}/products/${productCode(a.tariff)}/electricity-tariffs/${a.tariff}`, range = `?period_from=${iso(lo)}&period_to=${iso(hi)}&page_size=1500`;
+      const add = (rows, kind) => {
+        if (rows.some(r => r.payment_method === "DIRECT_DEBIT")) rows = rows.filter(r => !r.payment_method || r.payment_method === "DIRECT_DEBIT");
+        let n = 0;
+        for (const r of rows) {
+          const f = Math.max(Date.parse(r.valid_from), lo), t = Math.min(r.valid_to ? Date.parse(r.valid_to) : hi, hi);
+          if (f < t) { spans.push([f, t, +r.value_inc_vat, kind]); n++; }
+        }
+        return n;
+      };
+      let n = add(await getAll(base + "/standard-unit-rates/" + range), null);
+      if (!n && /INTELLI|IOG/.test(a.tariff)) {
+        // Intelligent Octopus Go publishes a day rate and a night rate instead of half-hourly prices.
+        n = add(await getAll(base + "/day-unit-rates/" + range), "day") + add(await getAll(base + "/night-unit-rates/" + range), "night");
+        if (n) notes.push("Intelligent Octopus Go: the cheap rate is applied from 23:30 to 05:30. Smart-charging slots Octopus gives you outside those hours are billed at the cheap rate too, but Octopus does not share them here, so they are costed at the day rate and may look more expensive than they were.");
       }
       log(`${a.tariff}: ${n} price period${n === 1 ? "" : "s"}.`);
     } catch (e) { log(`${a.tariff}: prices could not be read. ${e.message}`); }
   }
-  const rateAt = t => { for (const s of spans) if (t >= s[0] && t < s[1]) return s[2]; return null; };
+  const rateAt = t => {
+    const idx = local(t).idx, kind = idx >= 47 || idx < 11 ? "night" : "day"; // 23:30 to 05:30 UK time
+    for (const s of spans) if (t >= s[0] && t < s[1] && (!s[3] || s[3] === kind)) return s[2];
+    return null;
+  };
 
-  return finish(days, t => usage.has(t) ? usage.get(t) : null, rateAt, [...new Set(meter.ags.map(a => a.tariff))].join(", ") || "No tariff found");
+  return finish(days, t => usage.has(t) ? usage.get(t) : null, rateAt, [...new Set(meter.ags.map(a => a.tariff))].join(", ") || "No tariff found", notes);
 }
 
 /* Sample data: an Agile-style price curve, an evening cooking peak and a few overnight car charges. */
@@ -368,12 +383,12 @@ function loadSample(nDays) {
   return finish(days, t => usage.has(t) ? usage.get(t) : null, t => rate.has(t) ? rate.get(t) : null, "Sample Agile-style tariff");
 }
 
-function finish(days, usageAt, rateAt, tariff) {
+function finish(days, usageAt, rateAt, tariff, notes = []) {
   for (const d of days) d.cells = d.slots.map(t => {
     const l = local(t), kwh = usageAt(t), rate = rateAt(t);
     return { t, hm: l.hm, idx: l.idx, kwh, rate, cost: kwh != null && rate != null ? kwh * rate : null };
   });
-  return { days, tariff };
+  return { days, tariff, notes };
 }
 
 /* ---------- Analysis ---------- */
@@ -418,6 +433,7 @@ function render() {
   const worst = scored.reduce((a, b) => (!a || b.cost.p > a.cost.p ? b : a), null);
 
   $("subtitle").textContent = `${data.tariff} · ${data.days[0].label} to ${data.days.at(-1).label}`;
+  $("note").hidden = !data.notes.length; $("note").textContent = data.notes.join(" ");
   $("sample-badge").hidden = !state.sample;
   $("refresh").hidden = state.sample;
   $("signout").textContent = state.sample ? "Use my account" : "Change account";
