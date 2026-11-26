@@ -122,6 +122,8 @@ tr.worst td { background: color-mix(in oklab, var(--accent) 10%, transparent); f
 
 #tip { position: fixed; z-index: 10; pointer-events: none; background: var(--text); color: var(--bg); font-size: 12px; line-height: 1.4; padding: 7px 9px; border-radius: 6px; max-width: 220px; box-shadow: 0 4px 14px rgba(0,0,0,.25); }
 #tip b { font-weight: 650; }
+#diag summary { cursor: pointer; font-weight: 600; }
+#diag ul { margin: 8px 0 0; padding-left: 18px; color: var(--text-2); }
 .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; vertical-align: -2px; margin-right: 6px; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
@@ -163,6 +165,8 @@ tr.worst td { background: color-mix(in oklab, var(--accent) 10%, transparent); f
         Your key stays in this browser and is only ever sent to api.octopus.energy. This page has no server of its own.</p>
     </form>
   </section>
+
+  <details class="card small" id="diag" hidden><summary>What Octopus returned</summary><ul id="diag-list"></ul></details>
 
   <p id="loading" hidden><span class="spinner"></span><span id="loading-text">Fetching your readings…</span></p>
   <p class="error" id="load-error" hidden></p>
@@ -231,7 +235,8 @@ const SLOT = 30 * 60 * 1000;
 const STORE = "octopus-peaks.creds";
 const $ = id => document.getElementById(id);
 
-const state = { days: 30, win: 1, metric: "cost", creds: null, sample: false, data: null };
+const state = { days: 30, win: 1, metric: "cost", creds: null, sample: false, data: null, log: [] };
+const log = line => state.log.push(line);
 
 /* ---------- UK-local time helpers ---------- */
 const partsFmt = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
@@ -269,7 +274,11 @@ async function get(url, key) {
   } catch (e) {
     throw new ApiError(0, "Could not reach Octopus. Check your connection and try again.");
   }
-  if (!res.ok) throw new ApiError(res.status, `Octopus returned an error (${res.status}).`);
+  if (!res.ok) {
+    let detail = "";
+    try { detail = (await res.json()).detail || ""; } catch (_) {}
+    throw new ApiError(res.status, `Octopus returned an error (${res.status}${detail ? ": " + detail : ""}).`);
+  }
   return res.json();
 }
 async function getAll(url, key) {
@@ -291,40 +300,52 @@ async function loadLive(creds, nDays) {
     if (e.status === 403 || e.status === 404) throw new Error("That account number was not found for this API key. It looks like A-1234ABCD.");
     throw e;
   }
-  let meter = null;
+  const points = [];
+  let exportCount = 0;
   for (const prop of acct.properties || []) for (const mp of prop.electricity_meter_points || []) {
-    if (mp.is_export || meter) continue;
+    if (mp.is_export) { exportCount++; continue; }
     const ags = (mp.agreements || []).map(a => ({ tariff: a.tariff_code, from: a.valid_from ? Date.parse(a.valid_from) : -Infinity, to: a.valid_to ? Date.parse(a.valid_to) : Infinity }))
       .filter(a => a.from < to && a.to > from);
-    if (ags.length) meter = { mpan: mp.mpan, serials: (mp.meters || []).map(m => m.serial_number).filter(Boolean), ags };
+    points.push({ mpan: mp.mpan, serials: (mp.meters || []).map(m => m.serial_number).filter(Boolean), ags });
   }
-  if (!meter) throw new Error("No electricity import meter with an active tariff was found on this account.");
-  if (meter.ags.some(a => a.tariff.startsWith("E-2R"))) throw new Error("Your tariff is a two-register (Economy 7) tariff, which this page does not support yet.");
+  log(`Account found: ${points.length} import meter point${points.length === 1 ? "" : "s"}${exportCount ? `, ${exportCount} export` : ""}.`);
+  if (!points.length) throw new Error("No electricity import meter was found on this account.");
 
-  // Usage: try every meter serial and keep the one that has readings.
+  // Usage: try every meter on every import meter point and keep the one with the most readings.
   const q = `period_from=${iso(from)}&period_to=${iso(to)}&page_size=25000&order_by=period`;
-  let usage = new Map();
-  for (const serial of meter.serials) {
-    const rows = await getAll(`${API}/electricity-meter-points/${meter.mpan}/meters/${encodeURIComponent(serial)}/consumption/?${q}`, creds.key);
-    const m = new Map();
-    for (const r of rows) { const t = Date.parse(r.interval_start); if (t >= from && t < to) m.set(t, +r.consumption); }
-    if (m.size > usage.size) usage = m;
+  let usage = new Map(), meter = points.find(p => p.ags.length) || points[0];
+  for (const pt of points) for (const serial of pt.serials) {
+    const name = `Meter …${String(serial).slice(-4)}`;
+    try {
+      const rows = await getAll(`${API}/electricity-meter-points/${pt.mpan}/meters/${encodeURIComponent(serial)}/consumption/?${q}`, creds.key);
+      const m = new Map();
+      for (const r of rows) { const t = Date.parse(r.interval_start); if (t >= from && t < to) m.set(t, (m.get(t) || 0) + +r.consumption); }
+      log(`${name}: ${m.size} half-hourly readings.`);
+      if (m.size > usage.size) { usage = m; meter = pt; }
+    } catch (e) { log(`${name}: could not be read. ${e.message}`); }
   }
+  if (!points.some(p => p.serials.length)) log("Octopus lists no meter serial numbers for this account, so there are no readings to fetch.");
+  if (!meter.ags.length) log("No tariff agreement covers this period, so prices are missing.");
 
   // Rates: one request per agreement, clipped to when that agreement applied.
   const spans = [];
   for (const a of meter.ags) {
+    if (a.tariff.startsWith("E-2R")) { log(`${a.tariff}: two-register (Economy 7) tariffs are not supported yet, so its prices are missing.`); continue; }
     const lo = Math.max(from, a.from), hi = Math.min(to, a.to);
-    let rows = await getAll(`${API}/products/${productCode(a.tariff)}/electricity-tariffs/${a.tariff}/standard-unit-rates/?period_from=${iso(lo)}&period_to=${iso(hi)}&page_size=1500`);
-    if (rows.some(r => r.payment_method === "DIRECT_DEBIT")) rows = rows.filter(r => !r.payment_method || r.payment_method === "DIRECT_DEBIT");
-    for (const r of rows) {
-      const f = Math.max(Date.parse(r.valid_from), lo), t = Math.min(r.valid_to ? Date.parse(r.valid_to) : hi, hi);
-      if (f < t) spans.push([f, t, +r.value_inc_vat]);
-    }
+    try {
+      let rows = await getAll(`${API}/products/${productCode(a.tariff)}/electricity-tariffs/${a.tariff}/standard-unit-rates/?period_from=${iso(lo)}&period_to=${iso(hi)}&page_size=1500`);
+      if (rows.some(r => r.payment_method === "DIRECT_DEBIT")) rows = rows.filter(r => !r.payment_method || r.payment_method === "DIRECT_DEBIT");
+      let n = 0;
+      for (const r of rows) {
+        const f = Math.max(Date.parse(r.valid_from), lo), t = Math.min(r.valid_to ? Date.parse(r.valid_to) : hi, hi);
+        if (f < t) { spans.push([f, t, +r.value_inc_vat]); n++; }
+      }
+      log(`${a.tariff}: ${n} price period${n === 1 ? "" : "s"}.`);
+    } catch (e) { log(`${a.tariff}: prices could not be read. ${e.message}`); }
   }
   const rateAt = t => { for (const s of spans) if (t >= s[0] && t < s[1]) return s[2]; return null; };
 
-  return finish(days, t => usage.has(t) ? usage.get(t) : null, rateAt, [...new Set(meter.ags.map(a => a.tariff))].join(", "));
+  return finish(days, t => usage.has(t) ? usage.get(t) : null, rateAt, [...new Set(meter.ags.map(a => a.tariff))].join(", ") || "No tariff found");
 }
 
 /* Sample data: an Agile-style price curve, an evening cooking peak and a few overnight car charges. */
@@ -414,7 +435,10 @@ function render() {
     tiles.push(["Spent on electricity", gbp(total), `${gbp(total / nd)} a day, before standing charge`]);
     tiles.push(["Share spent in peak time frames", Math.round(share * 100) + "%", `${winName(win)} out of each 24`]);
   } else {
-    tiles.push(["No smart meter readings", "—", "Octopus returned prices but no half-hourly usage for this period."]);
+    const cells = data.days.flatMap(d => d.cells), hasUse = cells.some(c => c.kwh != null), hasRate = cells.some(c => c.rate != null);
+    tiles.push(!hasUse && !hasRate ? ["Nothing came back", "—", "Octopus returned no readings and no prices. See what Octopus returned, below."]
+      : !hasUse ? ["No half-hourly readings", "—", "Octopus has prices but no smart meter readings for this period. See below."]
+      : ["No prices found", "—", "Octopus has your readings but no unit rates for your tariff. Switch the heatmap to Usage. See below."]);
   }
   $("tiles").innerHTML = tiles.map(([k, v, s]) => `<div class="tile"><span class="k">${esc(k)}</span><span class="v num">${esc(v)}</span><span class="s">${esc(s)}</span></div>`).join("");
 
@@ -518,21 +542,28 @@ function show(view) {
   $("dash").hidden = view !== "dash";
   $("account-actions").hidden = view !== "dash";
 }
+function showDiag(open) {
+  $("diag").hidden = !state.log.length; $("diag").open = !!open;
+  $("diag-list").innerHTML = state.log.map(l => `<li>${esc(l)}</li>`).join("");
+}
 async function load() {
-  $("load-error").hidden = true; $("setup-error").hidden = true;
+  $("load-error").hidden = true; $("setup-error").hidden = true; state.log = []; showDiag(false);
   $("loading-text").textContent = state.sample ? "Building sample data…" : "Fetching your readings from Octopus…";
   show("loading");
   try {
     state.data = state.sample ? loadSample(state.days) : await loadLive(state.creds, state.days);
     segs(); show("dash"); render();
+    showDiag(!state.sample && !state.rows.some(r => r.cost));
   } catch (e) {
-    show("setup");
+    show("setup"); showDiag(true);
     $("setup-error").textContent = e.message || "Something went wrong."; $("setup-error").hidden = false;
   }
 }
 $("setup-form").addEventListener("submit", e => {
   e.preventDefault();
-  state.creds = { account: $("account").value.trim().toUpperCase(), key: $("apikey").value.trim() };
+  let account = $("account").value.replace(/\s+/g, "").replace(/[\u2010-\u2015]/g, "-").toUpperCase();
+  if (/^[0-9A-Z]{8}$/.test(account)) account = "A-" + account;
+  state.creds = { account, key: $("apikey").value.replace(/\s+/g, "") };
   state.sample = false;
   try { $("remember").checked ? localStorage.setItem(STORE, JSON.stringify(state.creds)) : localStorage.removeItem(STORE); } catch (_) {}
   load();
@@ -541,7 +572,7 @@ $("sample").addEventListener("click", () => { state.sample = true; load(); });
 $("refresh").addEventListener("click", load);
 $("signout").addEventListener("click", () => {
   try { localStorage.removeItem(STORE); } catch (_) {}
-  state.creds = null; state.sample = false; state.data = null; $("apikey").value = "";
+  state.creds = null; state.sample = false; state.data = null; state.log = []; showDiag(false); $("apikey").value = "";
   $("subtitle").textContent = "Your most expensive time of day, every day."; show("setup");
 });
 $("seg-days").addEventListener("click", e => { const v = e.target.dataset.v; if (v && +v !== state.days) { state.days = +v; load(); } });
