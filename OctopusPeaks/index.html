@@ -6,70 +6,67 @@
 <meta name="robots" content="noindex">
 <title>Octopus Peaks</title>
 <style>
-/* Layout idea: summary tiles first, then one heatmap (days down, time of day across) that carries the page,
-   then a per-day bar strip and the full table. Blue is data; everything else is neutral ink. */
+/* Layout idea: what the bill is made of first, then live draw, then when it happens (heatmap, typical day),
+   then which days and months. Blue is the house, orange the car, aqua always-on, yellow gas, grey fixed charges. */
 :root {
   color-scheme: light;
-  --bg: #f4f6f9;
-  --surface: #ffffff;
-  --surface-2: #eceff4;
-  --line: #dde2ea;
-  --text: #17191d;
-  --text-2: #5d6470;
-  --accent: #257de0;
-  --accent-ink: #1757ac;
-  --heat-lo: #e3effd;
-  --heat-hi: #0e3d7e;
-  --peak-ring: #17191d;
+  --bg: #f4f6f9; --surface: #ffffff; --surface-2: #eceff4; --line: #dde2ea;
+  --text: #17191d; --text-2: #5d6470;
+  --accent: #257de0; --accent-ink: #1757ac;
+  --heat-lo: #e3effd; --heat-hi: #0e3d7e; --peak-ring: #17191d;
+  --c-house: #257de0; --c-car: #f47230; --c-base: #00b894; --c-gas: #f2a600; --c-stand: #9aa2ae; --c-weekend: #ee7fac;
   --serious: #c2410c;
   --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --bg: #111418; --surface: #191c21; --surface-2: #23272e; --line: #2e333c;
-    --text: #eef0f3; --text-2: #9aa2ae; --accent: #338ced; --accent-ink: #84b9f3;
-    --heat-lo: #1b2a3d; --heat-hi: #9dc8f7; --peak-ring: #ffffff; --serious: #fb923c;
+    --bg: #111418; --surface: #191c21; --surface-2: #23272e; --line: #2e333c; --text: #eef0f3; --text-2: #9aa2ae;
+    --accent: #338ced; --accent-ink: #84b9f3; --heat-lo: #1b2a3d; --heat-hi: #9dc8f7; --peak-ring: #ffffff;
+    --c-house: #338ced; --c-car: #e76624; --c-base: #00a888; --c-gas: #d28e05; --c-stand: #6b7280; --c-weekend: #e24d8b;
+    --serious: #fb923c;
   }
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #111418; --surface: #191c21; --surface-2: #23272e; --line: #2e333c;
-  --text: #eef0f3; --text-2: #9aa2ae; --accent: #338ced; --accent-ink: #84b9f3;
-  --heat-lo: #1b2a3d; --heat-hi: #9dc8f7; --peak-ring: #ffffff; --serious: #fb923c;
+  --bg: #111418; --surface: #191c21; --surface-2: #23272e; --line: #2e333c; --text: #eef0f3; --text-2: #9aa2ae;
+  --accent: #338ced; --accent-ink: #84b9f3; --heat-lo: #1b2a3d; --heat-hi: #9dc8f7; --peak-ring: #ffffff;
+  --c-house: #338ced; --c-car: #e76624; --c-base: #00a888; --c-gas: #d28e05; --c-stand: #6b7280; --c-weekend: #e24d8b;
+  --serious: #fb923c;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; }
 body { background: var(--bg); color: var(--text); font: 15px/1.45 var(--font); -webkit-text-size-adjust: 100%; }
 .wrap { max-width: 1040px; margin: 0 auto; padding: 20px 16px 48px; display: flex; flex-direction: column; gap: 16px; }
 h1 { font-size: 22px; line-height: 1.2; margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
-h2 { font-size: 15px; margin: 0; }
+h2 { font-size: 15px; margin: 0; text-wrap: balance; }
 p { margin: 0; }
 .muted { color: var(--text-2); }
 .small { font-size: 13px; }
 .num { font-variant-numeric: tabular-nums; }
 a { color: var(--accent-ink); }
 [hidden] { display: none !important; }
-
 header.top { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: flex-end; justify-content: space-between; }
-.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; min-width: 0; }
 .card-head { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.stack { display: flex; flex-direction: column; gap: 16px; }
+.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 760px) { .two { grid-template-columns: minmax(0, 1fr); } }
 
-/* controls */
 .controls { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
 .ctl { display: flex; align-items: center; gap: 8px; }
 .ctl > span { font-size: 13px; color: var(--text-2); }
 .seg { display: inline-flex; background: var(--surface-2); border-radius: 8px; padding: 2px; }
-.seg button { border: 0; background: transparent; color: var(--text-2); font: inherit; font-size: 13px; padding: 5px 10px; border-radius: 6px; cursor: pointer; }
+.seg button { border: 0; background: transparent; color: var(--text-2); font: inherit; font-size: 13px; padding: 5px 10px; border-radius: 6px; cursor: pointer; white-space: nowrap; }
 .seg button[aria-pressed="true"] { background: var(--surface); color: var(--text); box-shadow: 0 0 0 1px var(--line); font-weight: 600; }
-button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button:focus-visible, input:focus-visible, a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .btn { border: 1px solid var(--line); background: var(--surface); color: var(--text); font: inherit; font-size: 14px; padding: 8px 14px; border-radius: 8px; cursor: pointer; }
 .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
 .btn.link { border: 0; background: none; padding: 4px 0; color: var(--accent-ink); text-decoration: underline; }
-.btn:disabled { opacity: .6; cursor: progress; }
-.badge { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 99px; background: var(--surface-2); color: var(--text-2); border: 1px solid var(--line); }
+.btn.sm { padding: 4px 10px; font-size: 13px; }
+.badge { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 99px; background: var(--surface-2); color: var(--text-2); border: 1px solid var(--line); white-space: nowrap; }
+.badge.warn { color: var(--serious); border-color: currentColor; background: transparent; }
 
-/* setup */
 form.setup { display: grid; gap: 12px; max-width: 460px; }
 label.field { display: grid; gap: 4px; font-size: 13px; color: var(--text-2); }
 input[type="text"], input[type="password"] { font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; width: 100%; }
@@ -78,7 +75,6 @@ input[type="text"], input[type="password"] { font: inherit; color: var(--text); 
 .error { color: var(--serious); font-size: 14px; }
 .error::before { content: "\26A0\FE0E  "; }
 
-/* tiles */
 .tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
 .tile { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .tile .k { font-size: 12px; color: var(--text-2); }
@@ -86,41 +82,50 @@ input[type="text"], input[type="password"] { font: inherit; color: var(--text); 
 .tile .s { font-size: 13px; color: var(--text-2); }
 @media (max-width: 760px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } .tile .v { font-size: 20px; } }
 
-/* heatmap */
+.split-bar { display: flex; gap: 2px; height: 26px; border-radius: 6px; overflow: hidden; }
+.split-bar > span { min-width: 3px; }
+.sw { display: inline-block; width: 11px; height: 11px; border-radius: 3px; margin-right: 8px; vertical-align: -1px; flex: none; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center; font-size: 12px; color: var(--text-2); }
+.legend .item { display: flex; align-items: center; }
+.legend .ramp { width: 110px; height: 10px; border-radius: 3px; background: linear-gradient(90deg, var(--heat-lo), var(--heat-hi)); margin: 0 6px; }
+.legend .pk { background: var(--surface-2); box-shadow: 0 0 0 1.5px var(--peak-ring); }
+.legend .nd { background: repeating-linear-gradient(135deg, var(--surface-2) 0 3px, transparent 3px 6px); border: 1px solid var(--line); }
+
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); }
+th { font-weight: 600; color: var(--text-2); font-size: 12px; }
+td.r, th.r { text-align: right; white-space: nowrap; }
+table.wide { min-width: 700px; } table.wide td, table.wide th { white-space: nowrap; }
+tr.worst td { background: color-mix(in oklab, var(--accent) 10%, transparent); font-weight: 600; }
+td .sub { display: block; color: var(--text-2); font-size: 12px; white-space: normal; }
+tbody tr:last-child td { border-bottom: 0; }
+
+.live-now { display: flex; flex-wrap: wrap; gap: 4px 24px; align-items: baseline; }
+.live-now .w { font-size: 40px; font-weight: 650; letter-spacing: -0.03em; line-height: 1; }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--c-base); margin-right: 6px; }
+.dot.stale { background: var(--c-stand); }
+.tester { border-top: 1px solid var(--line); margin-top: 14px; padding-top: 14px; display: flex; flex-direction: column; gap: 10px; }
+
 .scroll { overflow-x: auto; }
 .heat { min-width: 500px; display: grid; grid-template-columns: 72px repeat(48, minmax(0, 1fr)); gap: 1px; align-items: center; }
 .heat .hr { grid-column: span 4; font-size: 11px; color: var(--text-2); padding-bottom: 4px; }
 .heat .day { font-size: 11px; color: var(--text-2); white-space: nowrap; padding-right: 6px; }
 .heat .day.we { color: var(--text); font-weight: 600; }
 .cell { height: 15px; border-radius: 2px; background: var(--surface-2); padding: 0; border: 0; cursor: pointer; }
+.heat.dense .cell { height: 7px; border-radius: 1px; } .heat.dense .day { font-size: 0; line-height: 0; } .heat.dense .day.mark { font-size: 10px; }
 .cell.nodata { background: repeating-linear-gradient(135deg, var(--surface-2) 0 3px, transparent 3px 6px); cursor: default; }
 .cell.peak { box-shadow: 0 0 0 1.5px var(--peak-ring); position: relative; z-index: 1; }
+.cell.car { border-bottom: 3px solid var(--c-car); }
 .cell:hover, .cell:focus-visible { outline: 2px solid var(--accent); outline-offset: 0; z-index: 2; position: relative; }
-.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center; margin-top: 12px; font-size: 12px; color: var(--text-2); }
-.legend .ramp { width: 110px; height: 10px; border-radius: 3px; background: linear-gradient(90deg, var(--heat-lo), var(--heat-hi)); }
-.legend .item { display: flex; align-items: center; gap: 6px; }
-.legend .sw { width: 14px; height: 12px; border-radius: 2px; }
-.legend .sw.pk { background: var(--surface-2); box-shadow: 0 0 0 1.5px var(--peak-ring); }
-.legend .sw.nd { background: repeating-linear-gradient(135deg, var(--surface-2) 0 3px, transparent 3px 6px); border: 1px solid var(--line); }
 
-/* bars */
-#bars svg { display: block; width: 100%; height: auto; }
-#bars .grid { stroke: var(--line); stroke-width: 1; }
-#bars .axis { fill: var(--text-2); font-size: 11px; font-family: var(--font); }
-#bars .bar { fill: var(--accent); }
-#bars .bar.max { fill: var(--heat-hi); }
-#bars .hit { fill: transparent; cursor: pointer; }
-#bars .hit:hover + .bar, #bars .hit:focus + .bar { opacity: .75; }
-#bars .lbl { fill: var(--text); font-size: 11px; font-weight: 600; font-family: var(--font); }
+svg.chart { display: block; width: 100%; height: auto; }
+svg .grid { stroke: var(--line); stroke-width: 1; }
+svg .axis { fill: var(--text-2); font-size: 11px; font-family: var(--font); }
+svg .hit { fill: transparent; cursor: pointer; }
+svg .hit:hover { fill: color-mix(in oklab, var(--text) 7%, transparent); }
+svg .band { fill: color-mix(in oklab, var(--c-base) 12%, transparent); }
 
-/* table */
-table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 13px; }
-th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
-th { font-weight: 600; color: var(--text-2); font-size: 12px; position: sticky; top: 0; background: var(--surface); }
-td.r, th.r { text-align: right; }
-tr.worst td { background: color-mix(in oklab, var(--accent) 10%, transparent); font-weight: 600; }
-
-#tip { position: fixed; z-index: 10; pointer-events: none; background: var(--text); color: var(--bg); font-size: 12px; line-height: 1.4; padding: 7px 9px; border-radius: 6px; max-width: 220px; box-shadow: 0 4px 14px rgba(0,0,0,.25); }
+#tip { position: fixed; z-index: 10; pointer-events: none; background: var(--text); color: var(--bg); font-size: 12px; line-height: 1.4; padding: 7px 9px; border-radius: 6px; max-width: 240px; box-shadow: 0 4px 14px rgba(0,0,0,.25); }
 #tip b { font-weight: 650; }
 #diag summary { cursor: pointer; font-weight: 600; }
 #diag ul { margin: 8px 0 0; padding-left: 18px; color: var(--text-2); }
@@ -135,7 +140,7 @@ tr.worst td { background: color-mix(in oklab, var(--accent) 10%, transparent); f
   <header class="top">
     <div>
       <h1>Octopus Peaks</h1>
-      <p class="muted small" id="subtitle">Your most expensive time of day, every day.</p>
+      <p class="muted small" id="subtitle">What your energy bill is made of, and when it happens.</p>
     </div>
     <div class="row" id="account-actions" hidden>
       <span class="badge" id="sample-badge" hidden>Sample data</span>
@@ -144,7 +149,6 @@ tr.worst td { background: color-mix(in oklab, var(--accent) 10%, transparent); f
     </div>
   </header>
 
-  <!-- Connect -->
   <section class="card" id="setup">
     <div class="card-head"><h2>Connect your Octopus account</h2></div>
     <form class="setup" id="setup-form" autocomplete="off">
@@ -156,7 +160,7 @@ tr.worst td { background: color-mix(in oklab, var(--accent) 10%, transparent); f
       </label>
       <label class="check"><input type="checkbox" id="remember" checked> Remember on this device</label>
       <div class="row">
-        <button class="btn primary" id="connect" type="submit">Show my peaks</button>
+        <button class="btn primary" id="connect" type="submit">Show my energy</button>
         <button class="btn link" id="sample" type="button">Look at sample data first</button>
       </div>
       <p class="error" id="setup-error" hidden></p>
@@ -167,16 +171,13 @@ tr.worst td { background: color-mix(in oklab, var(--accent) 10%, transparent); f
   </section>
 
   <details class="card small" id="diag" hidden><summary>What Octopus returned</summary><ul id="diag-list"></ul></details>
-
   <p id="loading" hidden><span class="spinner"></span><span id="loading-text">Fetching your readings…</span></p>
-  <p class="error" id="load-error" hidden></p>
 
-  <!-- Dashboard -->
-  <div id="dash" hidden style="display:flex;flex-direction:column;gap:16px">
+  <div id="dash" class="stack" hidden>
     <div class="controls">
       <div class="ctl"><span id="lbl-days">Period</span>
         <div class="seg" id="seg-days" role="group" aria-labelledby="lbl-days">
-          <button type="button" data-v="7">7 days</button><button type="button" data-v="14">14 days</button><button type="button" data-v="30">30 days</button>
+          <button type="button" data-v="7">7 days</button><button type="button" data-v="30">30 days</button><button type="button" data-v="90">90 days</button>
         </div>
       </div>
       <div class="ctl"><span id="lbl-win">Time frame</span>
@@ -186,45 +187,91 @@ tr.worst td { background: color-mix(in oklab, var(--accent) 10%, transparent); f
       </div>
     </div>
 
-    <p class="card small muted" id="note" hidden></p>
-
     <section class="tiles" id="tiles" aria-label="Summary"></section>
 
     <section class="card">
+      <div class="card-head"><div><h2>What the bill is made of</h2><p class="muted small" id="split-sub"></p></div></div>
+      <div class="split-bar" id="split-bar"></div>
+      <div class="scroll" style="margin-top:12px"><table id="split-table" style="min-width:440px"></table></div>
+      <p class="small muted" id="note" style="margin-top:10px" hidden></p>
+    </section>
+
+    <section class="card" id="live" hidden>
       <div class="card-head">
-        <div>
-          <h2>Every half hour, every day</h2>
-          <p class="muted small" id="heat-sub"></p>
+        <div><h2>Right now</h2><p class="muted small"><span class="dot" id="live-dot"></span><span id="live-status">Waiting for your Home Mini…</span></p></div>
+      </div>
+      <div class="live-now">
+        <span class="w num" id="live-w">—</span>
+        <span class="muted" id="live-cost"></span>
+      </div>
+      <div id="live-chart" style="margin-top:10px"></div>
+      <div class="tester">
+        <div class="row" style="justify-content:space-between">
+          <div style="flex:1 1 260px"><h2>Measure an appliance</h2><p class="muted small" id="test-msg"></p></div>
+          <div class="row" id="test-actions"></div>
         </div>
+        <div class="scroll"><table id="appliances"></table></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <div><h2>Every half hour, every day</h2><p class="muted small" id="heat-sub"></p></div>
         <div class="seg" id="seg-metric" role="group" aria-label="Colour by">
-          <button type="button" data-v="cost">Cost</button><button type="button" data-v="kwh">Usage</button><button type="button" data-v="rate">Price</button>
+          <button type="button" data-v="cost">Cost</button><button type="button" data-v="kwh">Usage</button><button type="button" data-v="house">House only</button><button type="button" data-v="rate">Price</button>
         </div>
       </div>
       <div class="scroll"><div class="heat" id="heat"></div></div>
-      <div class="legend">
+      <div class="legend" style="margin-top:12px">
         <span class="item"><span class="num" id="leg-lo"></span><span class="ramp"></span><span class="num" id="leg-hi"></span></span>
         <span class="item"><span class="sw pk"></span>Costliest time frame that day</span>
+        <span class="item" id="leg-car"><span class="sw" style="background:var(--c-car);height:4px"></span>Car charging</span>
         <span class="item"><span class="sw nd"></span>No reading yet</span>
       </div>
     </section>
 
     <section class="card">
-      <div class="card-head"><div><h2 id="bars-title">Cost of each day's most expensive time frame</h2><p class="muted small">The highlighted bar is the worst of the period.</p></div></div>
-      <div id="bars"></div>
+      <div class="card-head"><div><h2>A typical day in the house</h2><p class="muted small" id="profile-sub"></p></div>
+        <div class="legend"><span class="item"><span class="sw" style="background:var(--c-house)"></span>Weekdays</span><span class="item"><span class="sw" style="background:var(--c-weekend)"></span>Weekends</span></div>
+      </div>
+      <div id="profile"></div>
+    </section>
+
+    <div class="two">
+      <section class="card" id="rates-card">
+        <div class="card-head"><div><h2>Day rate against night rate</h2><p class="muted small">House electricity only, car left out.</p></div></div>
+        <div class="scroll"><table id="rates-table"></table></div>
+        <p class="small muted" id="rates-note" style="margin-top:10px"></p>
+      </section>
+      <section class="card">
+        <div class="card-head"><div><h2>Heavy half hours</h2><p class="muted small">Times the house alone pulled 3 kW or more for a full half hour.</p></div></div>
+        <div id="heavy"></div>
+      </section>
+    </div>
+
+    <section class="card">
+      <div class="card-head"><div><h2>Electricity cost each day</h2><p class="muted small">Unit cost before standing charge. A dot marks an unusually expensive day.</p></div>
+        <div class="legend" id="daily-legend"></div>
+      </div>
+      <div id="daily"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><div><h2>Month by month</h2><p class="muted small" id="monthly-sub"></p></div>
+        <div class="legend" id="monthly-legend"></div>
+      </div>
+      <div id="monthly"></div>
     </section>
 
     <section class="card">
       <div class="card-head"><h2>Day by day</h2></div>
       <div class="scroll">
-        <table>
-          <thead><tr>
-            <th>Day</th><th>Costliest time frame</th><th class="r">Cost</th><th class="r">Used</th>
-            <th>Highest price</th><th class="r">p/kWh</th><th class="r">Day total</th>
-          </tr></thead>
+        <table class="wide">
+          <thead><tr><th>Day</th><th>Costliest time frame</th><th class="r">Cost</th><th class="r">Used</th><th class="r">House</th><th class="r">Car</th><th class="r">Gas</th><th class="r">Day total</th></tr></thead>
           <tbody id="rows"></tbody>
         </table>
       </div>
-      <p class="muted small" style="margin-top:10px">Costs are usage × unit rate including VAT. Standing charge is not included. Times are UK local.</p>
+      <p class="muted small" style="margin-top:10px">Costs include VAT. Day total is electricity, gas and both standing charges. Times are UK local.</p>
     </section>
   </div>
 </div>
@@ -233,49 +280,48 @@ tr.worst td { background: color-mix(in oklab, var(--accent) 10%, transparent); f
 <script>
 "use strict";
 const API = "https://api.octopus.energy/v1";
-const SLOT = 30 * 60 * 1000;
-const STORE = "octopus-peaks.creds";
+const SLOT = 30 * 60 * 1000, DAY = 48 * SLOT;
+const STORE = "octopus-peaks.creds", STORE_APPS = "octopus-peaks.appliances";
+const GAS_KWH_PER_M3 = 11.22; // 1.02264 volume correction x 39.5 MJ/m3 calorific value / 3.6
+const HEAVY_KWH = 1.5;        // 3 kW held for a full half hour
 const $ = id => document.getElementById(id);
-
-const state = { days: 30, win: 1, metric: "cost", creds: null, sample: false, data: null, log: [] };
+const state = { days: 30, win: 1, metric: "cost", creds: null, sample: false, data: null, log: [], token: null, live: { rows: [], timer: null, test: null } };
 const log = line => state.log.push(line);
 
-/* ---------- UK-local time helpers ---------- */
-const partsFmt = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+/* ---------- UK-local time ---------- */
+const partsFmt = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", weekday: "short", hourCycle: "h23" });
 const dayFmt = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", weekday: "short", day: "numeric", month: "short" });
+const monthFmt = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", month: "short", year: "2-digit" });
 function local(ms) {
   const p = {};
   for (const x of partsFmt.formatToParts(new Date(ms))) p[x.type] = x.value;
-  return { key: `${p.year}-${p.month}-${p.day}`, hm: `${p.hour}:${p.minute}`, idx: (+p.hour) * 2 + (+p.minute >= 30 ? 1 : 0) };
+  return { key: `${p.year}-${p.month}-${p.day}`, hm: `${p.hour}:${p.minute}`, idx: (+p.hour) * 2 + (+p.minute >= 30 ? 1 : 0), wd: p.weekday };
 }
-/* The last n complete UK days as [{key, label, weekend, slots:[ms...]}], oldest first. DST-safe. */
+const isNight = idx => idx >= 47 || idx < 11; // 23:30 to 05:30
+const hhmm = idx => `${String(idx >> 1).padStart(2, "0")}:${idx % 2 ? "30" : "00"}`;
+/* The last n complete UK days, oldest first, each with its half-hour cells. Clock changes handled. */
 function buildDays(n, now = Date.now()) {
-  const todayKey = local(now).key;
-  const days = [];
+  const todayKey = local(now).key, days = [];
   let cur = null;
   for (let t = Math.floor(now / SLOT) * SLOT; ; t -= SLOT) {
     const l = local(t);
     if (l.key >= todayKey) continue;
     if (!cur || cur.key !== l.key) {
       if (days.length === n) break;
-      const wd = new Date(t).toLocaleDateString("en-GB", { timeZone: "Europe/London", weekday: "short" });
-      cur = { key: l.key, label: dayFmt.format(new Date(t)), weekend: wd === "Sat" || wd === "Sun", slots: [] };
+      cur = { key: l.key, month: l.key.slice(0, 7), label: dayFmt.format(new Date(t)), monthLabel: monthFmt.format(new Date(t)), weekend: l.wd === "Sat" || l.wd === "Sun", cells: [] };
       days.push(cur);
     }
-    cur.slots.unshift(t);
+    cur.cells.unshift({ t, hm: l.hm, idx: l.idx, kwh: null, rate: null, kind: null, car: 0, smart: false });
   }
   return days.reverse();
 }
 
-/* ---------- Octopus API ---------- */
+/* ---------- Octopus REST ---------- */
 class ApiError extends Error { constructor(status, msg) { super(msg); this.status = status; } }
 async function get(url, key) {
   let res;
-  try {
-    res = await fetch(url, { headers: key ? { Authorization: "Basic " + btoa(key + ":") } : {} });
-  } catch (e) {
-    throw new ApiError(0, "Could not reach Octopus. Check your connection and try again.");
-  }
+  try { res = await fetch(url, { headers: key ? { Authorization: "Basic " + btoa(key + ":") } : {} }); }
+  catch (e) { throw new ApiError(0, "Could not reach Octopus. Check your connection and try again."); }
   if (!res.ok) {
     let detail = "";
     try { detail = (await res.json()).detail || ""; } catch (_) {}
@@ -288,13 +334,87 @@ async function getAll(url, key) {
   while (url) { const page = await get(url, key); out.push(...(page.results || [])); url = page.next; }
   return out;
 }
-const iso = ms => new Date(ms).toISOString().replace(".000", "");
+const iso = ms => new Date(ms).toISOString().replace(/\.\d{3}Z$/, "Z");
 const productCode = tariff => tariff.split("-").slice(2, -1).join("-");
 
-async function loadLive(creds, nDays) {
-  const days = buildDays(nDays);
-  const from = days[0].slots[0], to = days[days.length - 1].slots.at(-1) + SLOT;
+/* ---------- Octopus GraphQL (live readings, charger sessions) ---------- */
+async function gqlRaw(query, variables, token) {
+  let res;
+  try { res = await fetch(API + "/graphql/", { method: "POST", headers: { "Content-Type": "application/json", ...(token ? { Authorization: token } : {}) }, body: JSON.stringify({ query, variables }) }); }
+  catch (e) { throw new Error("Could not reach Octopus."); }
+  const body = await res.json();
+  if (!body.data || Object.values(body.data).every(v => v == null)) throw new Error(body.errors?.[0]?.message || "Octopus returned no data.");
+  return body.data;
+}
+async function gql(query, variables) {
+  if (!state.token || Date.now() - state.token.at > 45 * 60000) {
+    const r = await gqlRaw("mutation($k:String!){obtainKrakenToken(input:{APIKey:$k}){token}}", { k: state.creds.key });
+    state.token = { value: r.obtainKrakenToken.token, at: Date.now() };
+  }
+  return gqlRaw(query, variables, state.token.value);
+}
 
+/* ---------- Prices ---------- */
+/* spans: [from, to, value, kind]; kind is null for ordinary rates, "day"/"night" for two-rate tariffs */
+function lookup(spans) {
+  const by = {};
+  for (const s of spans) (by[s[3] || "std"] ||= []).push(s);
+  for (const k in by) by[k].sort((a, b) => a[0] - b[0]);
+  const find = (arr, t) => {
+    if (!arr) return null;
+    let lo = 0, hi = arr.length - 1, hit = null;
+    while (lo <= hi) { const m = (lo + hi) >> 1; if (arr[m][0] <= t) { hit = arr[m]; lo = m + 1; } else hi = m - 1; }
+    return hit && t < hit[1] ? hit[2] : null;
+  };
+  return { at: (t, kind) => find(by.std, t) ?? find(by[kind], t), twoRate: !!by.night };
+}
+async function loadPrices(ags, fuel, from, to) {
+  const unit = [], standing = [];
+  for (const a of ags) {
+    if (a.tariff.startsWith("E-2R")) { log(`${a.tariff}: two-register (Economy 7) tariffs are not supported yet, so its prices are missing.`); continue; }
+    const lo = Math.max(from, a.from), hi = Math.min(to, a.to);
+    const base = `${API}/products/${productCode(a.tariff)}/${fuel}-tariffs/${a.tariff}`, range = `?period_from=${iso(lo)}&period_to=${iso(hi)}&page_size=1500`;
+    const add = (rows, kind, into) => {
+      if (rows.some(r => r.payment_method === "DIRECT_DEBIT")) rows = rows.filter(r => !r.payment_method || r.payment_method === "DIRECT_DEBIT");
+      let n = 0;
+      for (const r of rows) {
+        const f = Math.max(Date.parse(r.valid_from), lo), t = Math.min(r.valid_to ? Date.parse(r.valid_to) : hi, hi);
+        if (f < t) { into.push([f, t, +r.value_inc_vat, kind]); n++; }
+      }
+      return n;
+    };
+    try {
+      let n = add(await getAll(base + "/standard-unit-rates/" + range), null, unit);
+      if (!n && fuel === "electricity") n = add(await getAll(base + "/day-unit-rates/" + range), "day", unit) + add(await getAll(base + "/night-unit-rates/" + range), "night", unit);
+      add(await getAll(base + "/standing-charges/" + range), null, standing);
+      log(`${a.tariff}: ${n} price period${n === 1 ? "" : "s"}.`);
+    } catch (e) { log(`${a.tariff}: prices could not be read. ${e.message}`); }
+  }
+  return { unit: lookup(unit), standing: lookup(standing) };
+}
+const agreements = (mp, from, to) => (mp.agreements || []).map(a => ({ tariff: a.tariff_code, from: a.valid_from ? Date.parse(a.valid_from) : -Infinity, to: a.valid_to ? Date.parse(a.valid_to) : Infinity })).filter(a => a.from < to && a.to > from);
+
+async function readMeter(kind, id, serials, key, from, to) {
+  let best = new Map();
+  for (const serial of serials) {
+    const name = `${kind === "gas" ? "Gas meter" : "Electricity meter"} …${String(serial).slice(-4)}`;
+    try {
+      const rows = await getAll(`${API}/${kind}-meter-points/${id}/meters/${encodeURIComponent(serial)}/consumption/?period_from=${iso(from)}&period_to=${iso(to)}&page_size=25000&order_by=period`, key);
+      const m = new Map();
+      for (const r of rows) { const t = Date.parse(r.interval_start); if (t >= from && t < to) m.set(t, (m.get(t) || 0) + +r.consumption); }
+      log(`${name}: ${m.size.toLocaleString("en-GB")} half-hourly readings.`);
+      if (m.size > best.size) best = m;
+    } catch (e) { log(`${name}: could not be read. ${e.message}`); }
+  }
+  return best;
+}
+
+/* ---------- Load everything for a real account ---------- */
+async function loadLive(creds, progress) {
+  const days = buildDays(365);
+  const from = days[0].cells[0].t, to = days.at(-1).cells.at(-1).t + SLOT, priceTo = Date.now() + DAY;
+
+  progress("Finding your meters…");
   let acct;
   try { acct = await get(`${API}/accounts/${encodeURIComponent(creds.account)}/`, creds.key); }
   catch (e) {
@@ -302,247 +422,457 @@ async function loadLive(creds, nDays) {
     if (e.status === 403 || e.status === 404) throw new Error("That account number was not found for this API key. It looks like A-1234ABCD.");
     throw e;
   }
-  const points = [];
-  let exportCount = 0;
-  for (const prop of acct.properties || []) for (const mp of prop.electricity_meter_points || []) {
-    if (mp.is_export) { exportCount++; continue; }
-    const ags = (mp.agreements || []).map(a => ({ tariff: a.tariff_code, from: a.valid_from ? Date.parse(a.valid_from) : -Infinity, to: a.valid_to ? Date.parse(a.valid_to) : Infinity }))
-      .filter(a => a.from < to && a.to > from);
-    points.push({ mpan: mp.mpan, serials: (mp.meters || []).map(m => m.serial_number).filter(Boolean), ags });
-  }
-  log(`Account found: ${points.length} import meter point${points.length === 1 ? "" : "s"}${exportCount ? `, ${exportCount} export` : ""}.`);
-  if (!points.length) throw new Error("No electricity import meter was found on this account.");
+  const props = acct.properties || [];
+  const ePoints = props.flatMap(p => p.electricity_meter_points || []).filter(mp => !mp.is_export);
+  const gPoints = props.flatMap(p => p.gas_meter_points || []);
+  log(`Account found: ${ePoints.length} electricity import meter point${ePoints.length === 1 ? "" : "s"}, ${gPoints.length} gas.`);
+  if (!ePoints.length) throw new Error("No electricity import meter was found on this account.");
+  const serialsOf = mp => (mp.meters || []).map(m => m.serial_number).filter(Boolean);
 
-  // Usage: try every meter on every import meter point and keep the one with the most readings.
-  const q = `period_from=${iso(from)}&period_to=${iso(to)}&page_size=25000&order_by=period`;
-  let usage = new Map(), meter = points.find(p => p.ags.length) || points[0];
-  for (const pt of points) for (const serial of pt.serials) {
-    const name = `Meter …${String(serial).slice(-4)}`;
-    try {
-      const rows = await getAll(`${API}/electricity-meter-points/${pt.mpan}/meters/${encodeURIComponent(serial)}/consumption/?${q}`, creds.key);
-      const m = new Map();
-      for (const r of rows) { const t = Date.parse(r.interval_start); if (t >= from && t < to) m.set(t, (m.get(t) || 0) + +r.consumption); }
-      log(`${name}: ${m.size} half-hourly readings.`);
-      if (m.size > usage.size) { usage = m; meter = pt; }
-    } catch (e) { log(`${name}: could not be read. ${e.message}`); }
-  }
-  if (!points.some(p => p.serials.length)) log("Octopus lists no meter serial numbers for this account, so there are no readings to fetch.");
-  if (!meter.ags.length) log("No tariff agreement covers this period, so prices are missing.");
+  progress("Fetching a year of electricity readings…");
+  let usage = new Map(), eMp = ePoints.find(mp => agreements(mp, from, to).length) || ePoints[0];
+  for (const mp of ePoints) { const m = await readMeter("electricity", mp.mpan, serialsOf(mp), creds.key, from, to); if (m.size > usage.size) { usage = m; eMp = mp; } }
+  const eAgs = agreements(eMp, from, priceTo);
+  if (!eAgs.length) log("No electricity tariff covers this period, so prices are missing.");
 
-  // Rates: one request per agreement, clipped to when that agreement applied.
-  const spans = [], notes = [];
-  for (const a of meter.ags) {
-    if (a.tariff.startsWith("E-2R")) { log(`${a.tariff}: two-register (Economy 7) tariffs are not supported yet, so its prices are missing.`); continue; }
-    const lo = Math.max(from, a.from), hi = Math.min(to, a.to);
+  progress("Fetching your prices…");
+  const ePrice = await loadPrices(eAgs, "electricity", from, priceTo);
+
+  let gas = null;
+  if (gPoints.length) {
+    progress("Fetching gas readings…");
+    const gMp = gPoints.find(mp => agreements(mp, from, to).length) || gPoints[0];
+    const gUse = await readMeter("gas", gMp.mprn, serialsOf(gMp), creds.key, from, to);
+    if (gUse.size) gas = { use: gUse, price: await loadPrices(agreements(gMp, from, priceTo), "gas", from, priceTo), perUnit: GAS_KWH_PER_M3 };
+  }
+
+  // Extras from the GraphQL API: Home Mini device, gas units, car charger sessions. All optional.
+  progress("Looking for your Home Mini and car charger…");
+  let deviceId = null, sessions = [], charger = null;
+  try {
+    const d = await gql(`query($a:String!){account(accountNumber:$a){
+      electricityAgreements(active:true){meterPoint{meters(includeInactive:false){smartDevices{deviceId}}}}
+      gasAgreements(active:true){meterPoint{meters{consumptionUnits}}}}}`, { a: creds.account });
+    deviceId = d.account?.electricityAgreements?.flatMap(x => x.meterPoint?.meters || []).flatMap(m => m.smartDevices || [])[0]?.deviceId || null;
+    log(deviceId ? "Smart meter device found for live readings." : "No smart meter device is linked for live readings.");
+    const units = d.account?.gasAgreements?.flatMap(x => x.meterPoint?.meters || [])[0]?.consumptionUnits;
+    if (gas && units && /kwh/i.test(units)) gas.perUnit = 1;
+    if (gas) log(`Gas readings are in ${gas.perUnit === 1 ? "kWh" : "cubic metres, converted to kWh at " + GAS_KWH_PER_M3 + " per m³"}.`);
+  } catch (e) { log(`Smart device lookup failed. ${e.message}`); }
+  // Octopus refuses long ranges of charging sessions, so ask for them a quarter at a time, newest first.
+  const frag = "chargePointPowerOutput chargingSessions(after:$after,before:$before,first:100){pageInfo{hasNextPage endCursor} edges{node{start end energyAdded{value} ... on SmartFlexChargingSession{type}}}}";
+  let reached = null, failed = null;
+  for (let hi = Date.now(); hi - from > 2 * DAY && !failed; hi -= 91 * DAY) {
+    const lo = Math.max(from, hi - 91 * DAY);
     try {
-      const base = `${API}/products/${productCode(a.tariff)}/electricity-tariffs/${a.tariff}`, range = `?period_from=${iso(lo)}&period_to=${iso(hi)}&page_size=1500`;
-      const add = (rows, kind) => {
-        if (rows.some(r => r.payment_method === "DIRECT_DEBIT")) rows = rows.filter(r => !r.payment_method || r.payment_method === "DIRECT_DEBIT");
-        let n = 0;
-        for (const r of rows) {
-          const f = Math.max(Date.parse(r.valid_from), lo), t = Math.min(r.valid_to ? Date.parse(r.valid_to) : hi, hi);
-          if (f < t) { spans.push([f, t, +r.value_inc_vat, kind]); n++; }
+      let after = iso(lo), pages = 0, more = true;
+      while (more && pages++ < 5) {
+        const d = await gql(`query($a:String!,$after:DateTime,$before:DateTime){devices(accountNumber:$a){name ... on SmartFlexChargePoint{${frag}} ... on SmartFlexVehicle{${frag}}}}`, { a: creds.account, after, before: iso(hi) });
+        more = false;
+        const devs = (d.devices || []).filter(dev => "chargingSessions" in dev);
+        if (devs.length && devs.every(dev => !dev.chargingSessions)) throw new Error("Octopus would not return sessions for this range.");
+        for (const dev of devs) {
+          charger = { name: dev.name || "Car charger", kw: +dev.chargePointPowerOutput || 7 };
+          for (const e of dev.chargingSessions.edges) sessions.push({ s: Date.parse(e.node.start), e: Date.parse(e.node.end), kwh: +(e.node.energyAdded?.value || 0), smart: (e.node.type || "SMART") === "SMART" });
+          if (dev.chargingSessions.pageInfo.hasNextPage) { more = true; after = dev.chargingSessions.pageInfo.endCursor; }
         }
-        return n;
-      };
-      let n = add(await getAll(base + "/standard-unit-rates/" + range), null);
-      if (!n && /INTELLI|IOG/.test(a.tariff)) {
-        // Intelligent Octopus Go publishes a day rate and a night rate instead of half-hourly prices.
-        n = add(await getAll(base + "/day-unit-rates/" + range), "day") + add(await getAll(base + "/night-unit-rates/" + range), "night");
-        if (n) notes.push("Intelligent Octopus Go: the cheap rate is applied from 23:30 to 05:30. Smart-charging slots Octopus gives you outside those hours are billed at the cheap rate too, but Octopus does not share them here, so they are costed at the day rate and may look more expensive than they were.");
       }
-      log(`${a.tariff}: ${n} price period${n === 1 ? "" : "s"}.`);
-    } catch (e) { log(`${a.tariff}: prices could not be read. ${e.message}`); }
+      reached = lo;
+    } catch (e) { failed = e.message; }
   }
-  const rateAt = t => {
-    const idx = local(t).idx, kind = idx >= 47 || idx < 11 ? "night" : "day"; // 23:30 to 05:30 UK time
-    for (const s of spans) if (t >= s[0] && t < s[1] && (!s[3] || s[3] === kind)) return s[2];
-    return null;
-  };
+  if (charger) log(`${charger.name}: ${sessions.length} charging sessions since ${dayFmt.format(new Date(reached))}.${failed ? " Earlier sessions are not available, so the car is not separated out before then." : ""}`);
+  else log(failed ? `Car charging sessions could not be read. ${failed}` : "No smart car charger is linked to this account.");
 
-  return finish(days, t => usage.has(t) ? usage.get(t) : null, rateAt, [...new Set(meter.ags.map(a => a.tariff))].join(", ") || "No tariff found", notes);
+  for (const d of days) for (const c of d.cells) {
+    c.kind = ePrice.unit.twoRate ? (isNight(c.idx) ? "night" : "day") : null;
+    c.kwh = usage.has(c.t) ? usage.get(c.t) : null;
+    c.rate = ePrice.unit.at(c.t, c.kind);
+  }
+  return finish({ days, tariff: [...new Set(eAgs.filter(a => a.to > Date.now()).map(a => a.tariff))].join(", ") || "No tariff found",
+    ePrice, gas, sessions, charger, deviceId, gasAt: t => gas?.use.get(t) });
 }
 
-/* Sample data: an Agile-style price curve, an evening cooking peak and a few overnight car charges. */
-function loadSample(nDays) {
-  const days = buildDays(nDays);
-  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-  const usage = new Map(), rate = new Map();
+/* ---------- Sample account: a two-rate EV tariff, a 7 kW charger, gas heating ---------- */
+function loadSample() {
+  const days = buildDays(365);
+  let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const sessions = [], gasUse = new Map();
   days.forEach((d, di) => {
-    const charge = di % 3 === 1, windy = 0.75 + rnd() * 0.6, last = di === days.length - 1;
-    d.slots.forEach((t, i) => {
-      const h = local(t).idx / 2;
-      rate.set(t, +(windy * (13 + 9 * Math.exp(-((h - 8) ** 2) / 5) + 24 * Math.exp(-((h - 17.5) ** 2) / 2.2) - 5 * Math.exp(-((h - 3.5) ** 2) / 6))).toFixed(2));
+    const winter = 0.5 + 0.5 * Math.cos(((+d.key.slice(5, 7) - 1) / 12) * 2 * Math.PI), last = di === days.length - 1;
+    const charge = di % 3 === 1, boost = di % 23 === 5, early = di % 9 === 4;
+    let cs = null, ce = null, ck = 0;
+    d.cells.forEach((c, i) => {
+      const h = c.idx / 2;
+      c.kind = isNight(c.idx) ? "night" : "day"; c.rate = c.kind === "night" ? 6.6 : 34.69;
+      gasUse.set(c.t, +((0.02 + winter * 0.16 * (Math.exp(-((h - 7) ** 2) / 3) + Math.exp(-((h - 18.5) ** 2) / 6))) * (0.7 + rnd() * 0.6)).toFixed(3));
       if (last && i > 20) return;
-      let k = 0.09 + rnd() * 0.07 + 0.35 * Math.exp(-((h - 7.5) ** 2) / 1.2) + (0.5 + rnd() * 0.7) * Math.exp(-((h - 18) ** 2) / 2.5);
-      if (charge && h >= 0.5 && h < 4.5) k += 3.4 + rnd() * 0.3;
-      if (d.weekend && h >= 11 && h < 13) k += 0.9 * rnd();
-      usage.set(t, +k.toFixed(3));
+      let k = 0.13 + rnd() * 0.05 + 0.3 * Math.exp(-((h - 7.5) ** 2) / 1.2) + (0.45 + rnd() * 0.6) * Math.exp(-((h - 18.5) ** 2) / 3) + winter * 0.12;
+      if (d.weekend && h >= 10 && h < 14) k += 0.5 * rnd();
+      if (di % 4 === 2 && h >= 19 && h < 20) k += 1.6;
+      const on = (charge && (h >= 0.5 && h < 4.5 || early && h >= 21 && h < 22.5)) || (boost && h >= 12 && h < 14.5);
+      if (on) { k += 3.4 + rnd() * 0.2; ck += 3.45; cs ??= c.t; ce = c.t + SLOT; }
+      c.kwh = +k.toFixed(3);
     });
+    if (cs) sessions.push({ s: cs - 4 * SLOT, e: ce + 6 * SLOT, kwh: ck, smart: !boost });
   });
-  return finish(days, t => usage.has(t) ? usage.get(t) : null, t => rate.has(t) ? rate.get(t) : null, "Sample Agile-style tariff");
+  const flat = v => ({ at: () => v, twoRate: false });
+  return finish({ days, tariff: "Sample two-rate EV tariff", ePrice: { unit: { at: (t, k) => k === "night" ? 6.6 : 34.69, twoRate: true }, standing: flat(60.86) },
+    gas: { use: gasUse, price: { unit: flat(7.9), standing: flat(28.81) }, perUnit: GAS_KWH_PER_M3 }, sessions, charger: { name: "Sample 7 kW charger", kw: 7 }, deviceId: "sample", gasAt: t => gasUse.get(t) });
 }
 
-function finish(days, usageAt, rateAt, tariff, notes = []) {
-  for (const d of days) d.cells = d.slots.map(t => {
-    const l = local(t), kwh = usageAt(t), rate = rateAt(t);
-    return { t, hm: l.hm, idx: l.idx, kwh, rate, cost: kwh != null && rate != null ? kwh * rate : null };
-  });
-  return { days, tariff, notes };
+/* ---------- Turn raw readings into the model the page draws ---------- */
+function median(a) { if (!a.length) return 0; const s = a.slice().sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; }
+function finish(d) {
+  const { days, ePrice, gas, sessions } = d, notes = [];
+  // Car: inside a charger session, anything well above what the house normally uses at that time of day is the car.
+  sessions.sort((a, b) => a.s - b.s);
+  const inSession = t => { for (const s of sessions) { if (s.s >= t + SLOT) break; if (s.e > t) return s; } return null; };
+  if (sessions.length) {
+    const byIdx = Array.from({ length: 48 }, () => []);
+    for (const day of days.slice(-120)) for (const c of day.cells) if (c.kwh != null && !inSession(c.t)) byIdx[c.idx].push(c.kwh);
+    const typical = byIdx.map(median), threshold = Math.min(1, (d.charger?.kw || 7) * 0.15);
+    for (const day of days) for (const c of day.cells) {
+      const s = c.kwh != null && inSession(c.t);
+      if (!s || c.kwh - typical[c.idx] < threshold) continue;
+      c.car = c.kwh - typical[c.idx];
+      if (s.smart && ePrice.unit.twoRate && c.rate != null) { const cheap = ePrice.unit.at(c.t, "night"); if (cheap != null && cheap < c.rate) { c.rate = cheap; c.smart = true; } }
+    }
+    notes.push("How the car is worked out: Octopus gives your charger's session times but not the exact half hours, so anything well above the house's usual level during a session is counted as the car. Smart-charge half hours are priced at the night rate, as Octopus bills them.");
+  } else if (ePrice.unit.twoRate) {
+    notes.push("No car charging sessions were found, so charging outside 23:30 to 05:30 is priced at the day rate and may look dearer than it was.");
+  }
+  for (const day of days) {
+    let g = null, gc = null;
+    for (const c of day.cells) {
+      c.cost = c.kwh != null && c.rate != null ? c.kwh * c.rate : null;
+      c.house = c.kwh != null ? c.kwh - c.car : null;
+      const gv = d.gasAt(c.t);
+      if (gv != null) { const k = gv * gas.perUnit, r = gas.price.unit.at(c.t); g = (g || 0) + k; if (r != null) gc = (gc || 0) + k * r; }
+    }
+    const noon = day.cells[Math.min(24, day.cells.length - 1)].t;
+    day.gasKwh = g; day.gasCost = gc;
+    day.standE = ePrice.standing.at(noon) || 0; day.standG = gas ? gas.price.standing.at(noon) || 0 : 0;
+    const m = day.cells.filter(c => c.cost != null);
+    day.metered = m.length; day.kwh = m.length ? m.reduce((s, c) => s + c.kwh, 0) : null;
+    day.cost = m.length ? m.reduce((s, c) => s + c.cost, 0) : null;
+    day.carKwh = m.reduce((s, c) => s + c.car, 0); day.carCost = m.reduce((s, c) => s + c.car * c.rate, 0);
+    day.total = (day.cost || 0) + (day.gasCost || 0) + day.standE + day.standG;
+  }
+  const now = Date.now(), kindNow = () => ePrice.unit.twoRate ? (isNight(local(Date.now()).idx) ? "night" : "day") : null;
+  const lastRated = days.at(-1).cells.filter(c => c.rate != null && !c.smart).at(-1);
+  return { ...d, notes, hasCar: sessions.length > 0, hasGas: !!gas, twoRate: ePrice.unit.twoRate,
+    rateNow: () => ePrice.unit.at(Date.now(), kindNow()) ?? lastRated?.rate ?? null,
+    dayRate: ePrice.unit.at(now, "day") ?? ePrice.unit.at(now - DAY, "day"), nightRate: ePrice.unit.at(now, "night") ?? ePrice.unit.at(now - DAY, "night") };
 }
 
-/* ---------- Analysis ---------- */
-function bestRun(cells, w, field, agg) {
+/* ---------- Analysis for the chosen period ---------- */
+function bestRun(cells, w, field) {
   let best = null;
   for (let i = 0; i + w <= cells.length; i++) {
     let sum = 0, ok = true;
     for (let j = i; j < i + w; j++) { const v = cells[j][field]; if (v == null) { ok = false; break; } sum += v; }
-    if (!ok) continue;
-    const score = agg === "avg" ? sum / w : sum;
-    if (!best || score > best.score + 1e-9) best = { score, i };
+    if (ok && (!best || sum > best.score + 1e-9)) best = { score: sum, i };
   }
   return best;
 }
 const span = (cells, i, w) => `${cells[i].hm}–${local(cells[i + w - 1].t + SLOT).hm}`;
-function analyse(data, w) {
-  return data.days.map(d => {
-    const c = d.cells, r = { day: d, cost: null, rate: null };
-    const metered = c.filter(x => x.cost != null);
-    r.total = metered.length ? metered.reduce((s, x) => s + x.cost, 0) : null;
-    r.partial = metered.length > 0 && metered.length < c.length;
-    const bc = bestRun(c, w, "cost", "sum");
-    if (bc) r.cost = { i: bc.i, p: bc.score, label: span(c, bc.i, w), kwh: c.slice(bc.i, bc.i + w).reduce((s, x) => s + x.kwh, 0) };
-    const rated = c.filter(x => x.rate != null);
-    if (rated.length) {
-      const flat = rated.every(x => x.rate === rated[0].rate), br = bestRun(c, w, "rate", "avg");
-      if (br) r.rate = { i: br.i, p: br.score, label: flat ? "Flat rate all day" : span(c, br.i, w) };
-    }
-    return r;
+function analyse(data, nDays, w) {
+  const rows = data.days.slice(-nDays).map(d => {
+    const b = bestRun(d.cells, w, "cost"), run = b ? d.cells.slice(b.i, b.i + w) : [];
+    return { day: d, partial: d.metered > 0 && d.metered < d.cells.length,
+      peak: b ? { i: b.i, p: b.score, label: span(d.cells, b.i, w), kwh: run.reduce((s, c) => s + c.kwh, 0), car: run.some(c => c.car > 0) } : null };
   });
+  const full = rows.filter(r => r.day.cost != null && !r.partial);
+  // Always-on: the level the house sits at in its quietest half hours, typical across the period.
+  const base = median(full.map(r => { const h = r.day.cells.map(c => c.house).filter(v => v != null).sort((a, b) => a - b); return h[Math.floor(h.length * 0.1)]; }));
+  const S = { car: 0, carKwh: 0, base: 0, baseKwh: 0, rest: 0, restKwh: 0, gas: 0, gasKwh: 0, stand: 0, dayKwh: 0, dayCost: 0, nightKwh: 0, nightCost: 0, heavy: [] };
+  for (const r of rows) {
+    S.stand += r.day.standE + r.day.standG; S.gas += r.day.gasCost || 0; S.gasKwh += r.day.gasKwh || 0;
+    for (const c of r.day.cells) {
+      if (c.cost == null) continue;
+      const b = Math.max(0, Math.min(c.house, base));
+      S.car += c.car * c.rate; S.carKwh += c.car; S.base += b * c.rate; S.baseKwh += b; S.rest += (c.house - b) * c.rate; S.restKwh += c.house - b;
+      if (c.kind === "night") { S.nightKwh += c.house; S.nightCost += c.house * c.rate; } else { S.dayKwh += c.house; S.dayCost += c.house * c.rate; }
+      if (c.house >= HEAVY_KWH) S.heavy.push(c);
+    }
+  }
+  S.elec = S.car + S.base + S.rest; S.total = S.elec + S.gas + S.stand; S.baseW = base * 2000;
+  const costs = full.map(r => r.day.cost), mean = costs.reduce((a, b) => a + b, 0) / (costs.length || 1);
+  const sd = Math.sqrt(costs.reduce((a, b) => a + (b - mean) ** 2, 0) / (costs.length || 1));
+  for (const r of rows) r.unusual = !r.partial && r.day.cost != null && costs.length >= 7 && r.day.cost > mean + 1.5 * sd;
+  return { rows, S, worst: rows.filter(r => r.peak).reduce((a, b) => (!a || b.peak.p > a.peak.p ? b : a), null) };
 }
 
 /* ---------- Rendering ---------- */
-const gbp = p => "£" + (p / 100).toFixed(2);
+const gbp = p => "£" + (p / 100).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const gbp0 = p => "£" + Math.round(p / 100).toLocaleString("en-GB");
+const kwh = v => (v >= 100 ? Math.round(v).toLocaleString("en-GB") : v.toFixed(1)) + " kWh";
+const watts = w => Math.round(w).toLocaleString("en-GB") + " W";
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const winName = w => ({ 1: "30 minutes", 2: "hour", 4: "2 hours", 6: "3 hours" }[w]);
+const sw = v => `<span class="sw" style="background:var(${v})"></span>`;
+function niceStep(raw) { const p = 10 ** Math.floor(Math.log10(raw || 1)); const f = raw / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * p; }
 
 function render() {
-  const { data, win, metric } = state;
-  const rows = analyse(data, win);
-  const scored = rows.filter(r => r.cost);
-  const worst = scored.reduce((a, b) => (!a || b.cost.p > a.cost.p ? b : a), null);
-
-  $("subtitle").textContent = `${data.tariff} · ${data.days[0].label} to ${data.days.at(-1).label}`;
+  const { data, win, days } = state, A = analyse(data, days, win), { rows, S, worst } = A;
+  state.A = A;
+  const baseW = Math.round(S.baseW / 10) * 10;
+  $("subtitle").textContent = `${data.tariff} · ${rows[0].day.label} to ${rows.at(-1).day.label}`;
   $("note").hidden = !data.notes.length; $("note").textContent = data.notes.join(" ");
-  $("sample-badge").hidden = !state.sample;
-  $("refresh").hidden = state.sample;
+  $("sample-badge").hidden = !state.sample; $("refresh").hidden = state.sample;
   $("signout").textContent = state.sample ? "Use my account" : "Change account";
 
-  // Tiles
-  const tiles = [];
-  if (worst) {
-    const tally = {};
-    for (const r of scored) tally[r.cost.label] = (tally[r.cost.label] || 0) + 1;
-    const [usual, n] = Object.entries(tally).sort((a, b) => b[1] - a[1])[0];
-    const total = rows.reduce((s, r) => s + (r.total || 0), 0), nd = rows.filter(r => r.total != null).length;
-    const share = scored.reduce((s, r) => s + r.cost.p, 0) / total;
-    tiles.push(["Worst " + winName(win), gbp(worst.cost.p), `${worst.day.label}, ${worst.cost.label} · ${worst.cost.kwh.toFixed(1)} kWh`]);
-    tiles.push(["Usual costliest time", usual, `${n} of ${scored.length} days`]);
-    tiles.push(["Spent on electricity", gbp(total), `${gbp(total / nd)} a day, before standing charge`]);
-    tiles.push(["Share spent in peak time frames", Math.round(share * 100) + "%", `${winName(win)} out of each 24`]);
-  } else {
-    const cells = data.days.flatMap(d => d.cells), hasUse = cells.some(c => c.kwh != null), hasRate = cells.some(c => c.rate != null);
-    tiles.push(!hasUse && !hasRate ? ["Nothing came back", "—", "Octopus returned no readings and no prices. See what Octopus returned, below."]
-      : !hasUse ? ["No half-hourly readings", "—", "Octopus has prices but no smart meter readings for this period. See below."]
-      : ["No prices found", "—", "Octopus has your readings but no unit rates for your tariff. Switch the heatmap to Usage. See below."]);
-  }
-  $("tiles").innerHTML = tiles.map(([k, v, s]) => `<div class="tile"><span class="k">${esc(k)}</span><span class="v num">${esc(v)}</span><span class="s">${esc(s)}</span></div>`).join("");
+  const t = [[`Energy cost, last ${rows.length} days`, gbp(S.total), `${gbp(S.total / rows.length)} a day, everything included`]];
+  if (data.hasCar) t.push(["Car charging", gbp(S.car), `${kwh(S.carKwh)} · ${Math.round(S.car / (S.elec || 1) * 100)}% of electricity cost`]);
+  else t.push(["Electricity", gbp(S.elec), `${kwh(S.baseKwh + S.restKwh)} before standing charge`]);
+  t.push(["Always on", gbp(S.base), `About ${baseW} W round the clock`]);
+  t.push(worst ? ["Worst " + winName(win), gbp(worst.peak.p), `${worst.day.label}, ${worst.peak.label}${worst.peak.car ? " · car charging" : ""}`] : ["No half-hourly readings", "—", "Open What Octopus returned, above."]);
+  $("tiles").innerHTML = t.map(([k, v, s]) => `<div class="tile"><span class="k">${esc(k)}</span><span class="v num">${esc(v)}</span><span class="s">${esc(s)}</span></div>`).join("");
 
-  // Heatmap
-  const all = data.days.flatMap(d => d.cells).map(c => c[metric]).filter(v => v != null).sort((a, b) => a - b);
+  const parts = [
+    ["--c-house", "Rest of the house", S.rest, S.restKwh, "Everything you switch on: cooking, washing, showers, lights, screens."],
+    ["--c-car", "Car charging", S.car, S.carKwh, data.charger ? `From ${data.charger.name} sessions.` : ""],
+    ["--c-base", "Always on", S.base, S.baseKwh, `The ${baseW} W the house draws when nobody is doing anything: fridge, freezer, router, standby.`],
+    ["--c-gas", "Gas", S.gas, S.gasKwh, "Heating and hot water."],
+    ["--c-stand", "Standing charges", S.stand, null, "Fixed daily charges for electricity" + (data.hasGas ? " and gas." : ".")],
+  ].filter(p => p[2] > 0.5);
+  const pct = v => Math.round(v / (S.total || 1) * 100) + "%";
+  $("split-sub").textContent = `${gbp(S.total)} over the last ${rows.length} days.`;
+  $("split-bar").innerHTML = parts.map(p => `<span style="flex:${p[2]};background:var(${p[0]})" data-tip="${esc(`<b>${p[1]}</b><br>${gbp(p[2])} · ${pct(p[2])}`)}"></span>`).join("");
+  $("split-table").innerHTML = `<thead><tr><th>Where it goes</th><th class="r">Energy</th><th class="r">Cost</th><th class="r">Share</th></tr></thead><tbody>` +
+    parts.map(p => `<tr><td>${sw(p[0])}${esc(p[1])}<span class="sub">${esc(p[4])}</span></td><td class="r num">${p[3] == null ? "" : kwh(p[3])}</td><td class="r num">${gbp(p[2])}</td><td class="r num">${pct(p[2])}</td></tr>`).join("") + "</tbody>";
+
+  renderHeat(rows); renderProfile(rows); renderRates(S); renderHeavy(S, rows.length); renderDaily(rows); renderMonthly();
+
+  $("rows").innerHTML = rows.slice().reverse().map(r => { const d = r.day; return `<tr class="${r === worst ? "worst" : ""}">
+    <td>${esc(d.label)}${r.partial ? " *" : ""} ${r.unusual ? '<span class="badge warn">High</span>' : ""}</td>
+    <td class="num">${r.peak ? esc(r.peak.label) + (r.peak.car ? ' <span class="badge">Car</span>' : "") : '<span class="muted">No reading yet</span>'}</td>
+    <td class="r num">${r.peak ? gbp(r.peak.p) : ""}</td><td class="r num">${d.kwh != null ? kwh(d.kwh) : ""}</td>
+    <td class="r num">${d.cost != null ? gbp(d.cost - d.carCost) : ""}</td><td class="r num">${d.carCost > 0.5 ? gbp(d.carCost) : ""}</td>
+    <td class="r num">${d.gasCost != null ? gbp(d.gasCost) : ""}</td><td class="r num">${gbp(d.total)}</td></tr>`; }).join("")
+    + (rows.some(r => r.partial) ? `<tr><td colspan="8" class="muted">* Readings for part of this day have not arrived yet.</td></tr>` : "");
+}
+
+function renderHeat(rows) {
+  const metric = state.metric, win = state.win;
+  const val = c => metric === "house" ? c.house : c[metric];
+  const all = rows.flatMap(r => r.day.cells).map(val).filter(v => v != null).sort((a, b) => a - b);
   const lo = Math.min(0, all[0] ?? 0), hi = all.length ? all[Math.min(all.length - 1, Math.floor(all.length * 0.99))] : 1;
-  const unit = metric === "cost" ? v => v.toFixed(1) + "p" : metric === "kwh" ? v => v.toFixed(2) + " kWh" : v => v.toFixed(1) + "p/kWh";
+  const unit = metric === "cost" ? v => v.toFixed(1) + "p" : metric === "rate" ? v => v.toFixed(1) + "p/kWh" : v => v.toFixed(2) + " kWh";
   $("leg-lo").textContent = unit(lo); $("leg-hi").textContent = unit(hi) + (all.at(-1) > hi ? "+" : "");
-  $("heat-sub").textContent = { cost: "Stronger colour means that half hour cost you more.", kwh: "Stronger colour means you used more electricity.", rate: "Stronger colour means the unit price was higher." }[metric];
+  const dense = rows.length > 45;
+  $("leg-car").hidden = !state.data.hasCar || dense || metric === "house";
+  $("heat-sub").textContent = { cost: "Stronger colour means that half hour cost you more.", kwh: "Stronger colour means you used more electricity.", house: "Electricity use with the car taken out.", rate: "Stronger colour means the unit price was higher." }[metric];
   let h = `<span></span>` + [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22].map(x => `<span class="hr num">${String(x).padStart(2, "0")}:00</span>`).join("");
   rows.forEach((r, di) => {
-    h += `<span class="day${r.day.weekend ? " we" : ""}">${esc(r.day.label)}</span>`;
+    const mark = dense && (di === 0 || /-(01|15)$/.test(r.day.key));
+    h += `<span class="day${r.day.weekend && !dense ? " we" : ""}${mark ? " mark" : ""}">${esc(dense ? r.day.label.split(" ").slice(1).join(" ") : r.day.label)}</span>`;
     const byIdx = new Map();
-    r.day.cells.forEach((c, ci) => { if (!byIdx.has(c.idx)) byIdx.set(c.idx, ci); }); // clock-change days: first of a repeated slot
+    r.day.cells.forEach((c, ci) => { if (!byIdx.has(c.idx)) byIdx.set(c.idx, ci); });
     for (let x = 0; x < 48; x++) {
-      const ci = byIdx.get(x), c = ci == null ? null : r.day.cells[ci], v = c ? c[metric] : null;
+      const ci = byIdx.get(x), c = ci == null ? null : r.day.cells[ci], v = c ? val(c) : null;
       if (v == null) { h += `<span class="cell nodata"></span>`; continue; }
-      const pct = Math.round(Math.max(0, Math.min(1, (v - lo) / (hi - lo || 1))) * 100);
-      const peak = r.cost && ci >= r.cost.i && ci < r.cost.i + win;
-      h += `<button type="button" class="cell${peak ? " peak" : ""}" data-d="${di}" data-c="${ci}" style="background:color-mix(in oklab,var(--heat-hi) ${pct}%,var(--heat-lo))" aria-label="${esc(r.day.label)} ${c.hm}"></button>`;
+      const p = Math.round(Math.max(0, Math.min(1, (v - lo) / (hi - lo || 1))) * 100);
+      const peak = r.peak && ci >= r.peak.i && ci < r.peak.i + win;
+      h += `<button type="button" class="cell${peak ? " peak" : ""}${c.car > 0 && !dense && metric !== "house" ? " car" : ""}" data-d="${di}" data-c="${ci}" style="background-color:color-mix(in oklab,var(--heat-hi) ${p}%,var(--heat-lo))" aria-label="${esc(r.day.label)} ${c.hm}"></button>`;
     }
   });
-  $("heat").innerHTML = h;
-
-  // Bars
-  $("bars-title").textContent = `Cost of each day's most expensive ${winName(win)}`;
-  renderBars(rows, worst);
-
-  // Table (newest first)
-  $("rows").innerHTML = rows.slice().reverse().map(r => `<tr class="${r === worst ? "worst" : ""}">
-    <td>${esc(r.day.label)}${r.partial ? " *" : ""}</td>
-    <td class="num">${r.cost ? esc(r.cost.label) : '<span class="muted">No reading yet</span>'}</td>
-    <td class="r num">${r.cost ? gbp(r.cost.p) : ""}</td>
-    <td class="r num">${r.cost ? r.cost.kwh.toFixed(2) + " kWh" : ""}</td>
-    <td class="num">${r.rate ? esc(r.rate.label) : ""}</td>
-    <td class="r num">${r.rate ? r.rate.p.toFixed(2) : ""}</td>
-    <td class="r num">${r.total != null ? gbp(r.total) : ""}</td></tr>`).join("")
-    + (rows.some(r => r.partial) ? `<tr><td colspan="7" class="muted">* Readings for part of this day have not arrived yet.</td></tr>` : "");
-
-  state.rows = rows;
+  $("heat").className = "heat" + (dense ? " dense" : ""); $("heat").innerHTML = h;
 }
 
-function renderBars(rows, worst) {
-  const W = Math.max(320, $("bars").clientWidth), H = 190, L = 44, R = 8, T = 18, B = 24;
-  const max = Math.max(1, ...rows.map(r => r.cost ? r.cost.p : 0));
-  const step = niceStep(max / 3), top = Math.ceil(max / step) * step;
-  const y = v => T + (H - T - B) * (1 - v / top), bw = (W - L - R) / rows.length, gap = Math.min(4, bw * 0.25);
-  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Bar chart of the cost of each day's most expensive time frame. The table below has the same figures.">`;
-  for (let v = 0; v <= top + 1e-9; v += step) s += `<line class="grid" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text class="axis" x="${L - 6}" y="${y(v) + 4}" text-anchor="end">${gbp(v)}</text>`;
-  const every = Math.ceil(rows.length / Math.floor((W - L - R) / 52));
-  rows.forEach((r, i) => {
-    const x = L + i * bw;
-    if ((rows.length - 1 - i) % every === 0) s += `<text class="axis" x="${i === rows.length - 1 ? W - R : x + bw / 2}" y="${H - 6}" text-anchor="${i === rows.length - 1 ? "end" : "middle"}">${esc(r.day.label.split(" ").slice(1).join(" "))}</text>`;
-    if (!r.cost) return;
-    const by = y(r.cost.p), bh = y(0) - by, rad = Math.min(3, (bw - gap) / 2, bh);
-    s += `<rect class="hit" tabindex="0" data-b="${i}" x="${x}" y="${T}" width="${bw}" height="${H - T - B}"/>`
-       + `<path class="bar${r === worst ? " max" : ""}" d="M${x + gap / 2},${y(0)} v${-(bh - rad)} q0,${-rad} ${rad},${-rad} h${bw - gap - 2 * rad} q${rad},0 ${rad},${rad} v${bh - rad} z" pointer-events="none"/>`;
-    if (r === worst) s += `<text class="lbl" x="${Math.min(W - R - 20, Math.max(L + 20, x + bw / 2))}" y="${by - 5}" text-anchor="middle">${gbp(r.cost.p)}</text>`;
+/* Shared frame for the SVG charts */
+function frame(el, top, H = 190) {
+  const W = Math.max(300, el.clientWidth), L = 46, R = 10, T = 16, B = 24, step = niceStep(top / 3), max = Math.ceil(top / step - 1e-9) * step || step;
+  return { W, H, L, R, T, B, step, max, y: v => T + (H - T - B) * (1 - v / max), pw: W - L - R };
+}
+function gridLines(f, fmt) {
+  let s = "";
+  for (let v = 0; v <= f.max + 1e-9; v += f.step) s += `<line class="grid" x1="${f.L}" x2="${f.W - f.R}" y1="${f.y(v)}" y2="${f.y(v)}"/><text class="axis" x="${f.L - 6}" y="${f.y(v) + 4}" text-anchor="end">${fmt(v)}</text>`;
+  return s;
+}
+/* items: [{axis, tip, values:[...], mark}] ; colours: css variable names in stack order */
+function stackedBars(el, items, colours, fmt, label) {
+  const f = frame(el, Math.max(100, ...items.map(i => i.values.reduce((a, b) => a + b, 0)))), bw = f.pw / items.length, gap = Math.min(4, bw * 0.25);
+  const every = Math.ceil(items.length / Math.max(1, Math.floor(f.pw / 52)));
+  let s = `<svg class="chart" viewBox="0 0 ${f.W} ${f.H}" role="img" aria-label="${esc(label)}">` + gridLines(f, fmt);
+  items.forEach((it, i) => {
+    const x = f.L + i * bw, last = i === items.length - 1;
+    if ((items.length - 1 - i) % every === 0) s += `<text class="axis" x="${last ? f.W - f.R : x + bw / 2}" y="${f.H - 6}" text-anchor="${last ? "end" : "middle"}">${esc(it.axis)}</text>`;
+    let acc = 0;
+    it.values.forEach((v, k) => {
+      if (!(v > 0)) return;
+      const y1 = f.y(acc + v), hgt = Math.max(0.5, f.y(acc) - y1 - (acc > 0 ? 2 : 0));
+      s += `<rect x="${x + gap / 2}" y="${y1}" width="${Math.max(1, bw - gap)}" height="${hgt}" rx="${Math.min(2, hgt / 2)}" fill="var(${colours[k]})"/>`; acc += v;
+    });
+    if (it.mark) s += `<circle cx="${x + bw / 2}" cy="${f.y(acc) - 7}" r="3" fill="var(--serious)"/>`;
+    if (acc > 0) s += `<rect class="hit" tabindex="0" x="${x}" y="${f.T}" width="${bw}" height="${f.H - f.T - f.B}" data-tip="${esc(it.tip)}"/>`;
   });
-  $("bars").innerHTML = s + "</svg>";
+  el.innerHTML = s + "</svg>";
 }
-function niceStep(raw) { const p = 10 ** Math.floor(Math.log10(raw)); const f = raw / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * p; }
+
+function renderProfile(rows) {
+  const sum = [0, 1].map(() => Array.from({ length: 48 }, () => [0, 0]));
+  for (const r of rows) for (const c of r.day.cells) if (c.house != null) { const a = sum[r.day.weekend ? 1 : 0][c.idx]; a[0] += c.house; a[1]++; }
+  const avg = sum.map(s => s.map(a => a[1] ? a[0] / a[1] * 2 : null)); // kW
+  const el = $("profile"), f = frame(el, Math.max(0.5, ...avg.flat().filter(v => v != null)) * 1.05, 200), x = i => f.L + (i + 0.5) * f.pw / 48, ph = f.H - f.T - f.B;
+  let s = `<svg class="chart" viewBox="0 0 ${f.W} ${f.H}" role="img" aria-label="Average house electricity use through the day, weekdays and weekends">`;
+  if (state.data.twoRate) s += `<rect class="band" x="${f.L}" y="${f.T}" width="${11 * f.pw / 48}" height="${ph}"/><rect class="band" x="${f.L + 47 * f.pw / 48}" y="${f.T}" width="${f.pw / 48}" height="${ph}"/><text class="axis" x="${f.L + 4}" y="${f.T + 11}">Night rate</text>`;
+  s += gridLines(f, v => v.toFixed(f.step < 1 ? 1 : 0) + " kW");
+  for (let hr = 0; hr <= 24; hr += f.W < 520 ? 6 : 3) s += `<text class="axis" x="${f.L + hr * 2 * f.pw / 48}" y="${f.H - 6}" text-anchor="${hr === 24 ? "end" : hr ? "middle" : "start"}">${String(hr % 24).padStart(2, "0")}:00</text>`;
+  avg.forEach((a, k) => {
+    const pts = a.map((v, i) => v == null ? null : `${x(i).toFixed(1)},${f.y(v).toFixed(1)}`).filter(Boolean);
+    if (pts.length) s += `<polyline points="${pts.join(" ")}" fill="none" stroke="var(${k ? "--c-weekend" : "--c-house"})" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+  });
+  const f2 = v => v == null ? "—" : v.toFixed(2) + " kW";
+  for (let i = 0; i < 48; i++) s += `<rect class="hit" x="${f.L + i * f.pw / 48}" y="${f.T}" width="${f.pw / 48}" height="${ph}" data-tip="${esc(`<b>${hhmm(i)}</b><br>Weekdays ${f2(avg[0][i])}<br>Weekends ${f2(avg[1][i])}`)}"/>`;
+  el.innerHTML = s + "</svg>";
+  const wk = avg[0].map((v, i) => [v ?? 0, i]).sort((a, b) => b[0] - a[0])[0];
+  $("profile-sub").textContent = `Average draw at each time of day, car left out. Weekdays peak around ${hhmm(wk[1])} at ${wk[0].toFixed(1)} kW.`;
+}
+
+function renderRates(S) {
+  const d = state.data;
+  $("rates-card").hidden = !d.twoRate || d.dayRate == null || d.nightRate == null;
+  if ($("rates-card").hidden) return;
+  const tot = S.dayKwh + S.nightKwh || 1, save = d.dayRate - d.nightRate;
+  const row = (name, hours, k, c) => `<tr><td>${name}<span class="sub">${hours}</span></td><td class="r num">${kwh(k)}</td><td class="r num">${gbp(c)}</td><td class="r num">${Math.round(k / tot * 100)}%</td></tr>`;
+  $("rates-table").innerHTML = `<thead><tr><th>Rate</th><th class="r">Energy</th><th class="r">Cost</th><th class="r">Share of kWh</th></tr></thead><tbody>` +
+    row(`Day, ${d.dayRate.toFixed(2)}p`, "05:30 to 23:30", S.dayKwh, S.dayCost) + row(`Night, ${d.nightRate.toFixed(2)}p`, "23:30 to 05:30", S.nightKwh, S.nightCost) + "</tbody>";
+  const run = (name, k) => `${name} (about ${k} kWh) saves ${Math.round(k * save)}p a run, ${gbp0(k * save * 4 * 52)} a year at four runs a week`;
+  $("rates-note").textContent = `Every kWh moved into the night window saves ${save.toFixed(1)}p. On a delay timer: ${run("a dishwasher", 1.2)}; ${run("a washing machine", 0.8)}; ${run("a tumble dryer", 2.5)}. Typical figures, yours will differ.`;
+}
+
+function renderHeavy(S, nDays) {
+  const h = S.heavy;
+  if (!h.length) { $("heavy").innerHTML = `<p class="muted small">None in this period.</p>`; return; }
+  const cost = h.reduce((s, c) => s + c.house * c.rate, 0), byHour = {};
+  for (const c of h) { const k = c.idx >> 1; byHour[k] ||= { n: 0, p: 0 }; byHour[k].n++; byHour[k].p += c.house * c.rate; }
+  const top = Object.entries(byHour).sort((a, b) => b[1].p - a[1].p).slice(0, 4);
+  $("heavy").innerHTML = `<p class="small" style="margin-bottom:10px"><b class="num">${h.length}</b> half hours in ${nDays} days, costing <b class="num">${gbp(cost)}</b>. Something big ran for the whole half hour: usually an electric shower, oven, tumble dryer, immersion heater or plug-in heaters.</p>
+    <table><thead><tr><th>Most costly around</th><th class="r">Times</th><th class="r">Cost</th></tr></thead><tbody>` +
+    top.map(([k, v]) => `<tr><td class="num">${String(k).padStart(2, "0")}:00 to ${String((+k + 1) % 24).padStart(2, "0")}:00</td><td class="r num">${v.n}</td><td class="r num">${gbp(v.p)}</td></tr>`).join("") + "</tbody></table>";
+}
+
+function renderDaily(rows) {
+  const car = state.data.hasCar;
+  $("daily-legend").innerHTML = car ? `<span class="item">${sw("--c-house")}House</span><span class="item">${sw("--c-car")}Car</span>` : "";
+  stackedBars($("daily"), rows.map(r => { const d = r.day, c = d.cost || 0; return { axis: d.label.split(" ").slice(1).join(" "), mark: r.unusual, values: [c - d.carCost, d.carCost],
+    tip: `<b>${d.label}</b><br>${gbp(c)}${d.kwh != null ? " · " + kwh(d.kwh) : ""}${car ? `<br>House ${gbp(c - d.carCost)}<br>Car ${gbp(d.carCost)}` : ""}${r.peak ? `<br>Costliest: ${r.peak.label}` : ""}${r.unusual ? "<br>Unusually high" : ""}` }; }),
+    ["--c-house", "--c-car"], gbp0, "Electricity cost each day, split into house and car. The table below has the same figures.");
+}
+
+function renderMonthly() {
+  const d = state.data, by = new Map();
+  for (const day of d.days) {
+    const m = by.get(day.month) || { label: day.monthLabel, e: 0, g: 0, s: 0, n: 0, kwh: 0 };
+    m.e += day.cost || 0; m.g += day.gasCost || 0; m.s += day.standE + day.standG; m.n++; m.kwh += day.kwh || 0; by.set(day.month, m);
+  }
+  let months = [...by.values()];
+  if (months.length > 1 && months[0].n < 27) months = months.slice(1); // drop the part-month at the far end
+  $("monthly-legend").innerHTML = `<span class="item">${sw("--c-house")}Electricity</span>${d.hasGas ? `<span class="item">${sw("--c-gas")}Gas</span>` : ""}<span class="item">${sw("--c-stand")}Standing charges</span>`;
+  $("monthly-sub").textContent = `Everything on the bill for the last year. ${months.at(-1).label.split(" ")[0]} is the month so far.`;
+  stackedBars($("monthly"), months.map((m, i) => ({ axis: m.label.split(" ")[0], values: [m.e, m.g, m.s],
+    tip: `<b>${m.label}${i === months.length - 1 ? " so far" : ""}</b><br>${gbp(m.e + m.g + m.s)} in total<br>Electricity ${gbp(m.e)} · ${kwh(m.kwh)}${d.hasGas ? `<br>Gas ${gbp(m.g)}` : ""}<br>Standing charges ${gbp(m.s)}` })),
+    ["--c-house", "--c-gas", "--c-stand"], gbp0, "Total energy cost for each of the last twelve months, split into electricity, gas and standing charges.");
+}
+
+/* ---------- Live: Home Mini ---------- */
+function sampleTelemetry() {
+  const now = Math.floor(Date.now() / 10000) * 10000, out = [], on = state.live.test?.tapped;
+  for (let t = now - 600000; t <= now; t += 10000) out.push({ t, w: 420 + 60 * Math.sin(t / 47000) + ((t / 10000) % 37 < 9 ? 1900 : 0) + (on && t > on ? 2200 : 0) });
+  return out;
+}
+async function pollLive() {
+  if (document.hidden || $("dash").hidden || !state.data?.deviceId) return;
+  const L = state.live;
+  try {
+    let rows;
+    if (state.sample) rows = sampleTelemetry();
+    else {
+      const d = await gql("query($d:String!,$s:DateTime,$e:DateTime){smartMeterTelemetry(deviceId:$d,start:$s,end:$e,grouping:TEN_SECONDS){readAt demand}}",
+        { d: state.data.deviceId, s: iso(Date.now() - (L.rows.length ? 120000 : 600000)), e: iso(Date.now()) });
+      rows = (d.smartMeterTelemetry || []).filter(r => r.demand != null).map(r => ({ t: Date.parse(r.readAt), w: +r.demand }));
+    }
+    const m = new Map(L.rows.map(r => [r.t, r])); for (const r of rows) m.set(r.t, r);
+    L.rows = [...m.values()].sort((a, b) => a.t - b.t).filter(r => r.t > Date.now() - 600000);
+    L.error = null;
+  } catch (e) { L.error = e.message; }
+  renderLive(); stepTest();
+}
+function renderLive() {
+  if (!state.data) return;
+  const L = state.live, last = L.rows.at(-1), rate = state.data.rateNow(), fresh = last && Date.now() - last.t < 90000;
+  $("live-dot").className = "dot" + (fresh ? "" : " stale");
+  $("live-status").textContent = !last ? (L.error ? `No live readings. ${L.error}` : "Waiting for your Home Mini…") : fresh ? `Live from your Home Mini, updated ${local(last.t).hm}` : `Last reading ${local(last.t).hm}. The Home Mini may be offline.`;
+  $("live-w").textContent = last ? watts(last.w) : "—";
+  $("live-cost").textContent = last && rate != null ? `${(last.w / 1000 * rate).toFixed(1)}p an hour at the current ${rate.toFixed(2)}p rate` : "";
+  const el = $("live-chart");
+  if (L.rows.length < 2) { el.innerHTML = ""; return; }
+  const f = frame(el, Math.max(500, ...L.rows.map(r => r.w)) * 1.05, 130), t0 = L.rows[0].t, t1 = Math.max(last.t, t0 + 60000), x = t => f.L + (t - t0) / (t1 - t0) * f.pw;
+  const pts = L.rows.map(r => `${x(r.t).toFixed(1)},${f.y(Math.max(0, r.w)).toFixed(1)}`);
+  el.innerHTML = `<svg class="chart" viewBox="0 0 ${f.W} ${f.H}" role="img" aria-label="Power drawn over the last ten minutes">${gridLines(f, v => (v / 1000).toFixed(f.step % 1000 ? 1 : 0) + " kW")}
+    <polygon points="${x(t0)},${f.y(0)} ${pts.join(" ")} ${x(last.t)},${f.y(0)}" fill="color-mix(in oklab, var(--c-house) 14%, transparent)"/>
+    <polyline points="${pts.join(" ")}" fill="none" stroke="var(--c-house)" stroke-width="2" stroke-linejoin="round"/>
+    <circle cx="${x(last.t)}" cy="${f.y(Math.max(0, last.w))}" r="4" fill="var(--c-house)" stroke="var(--surface)" stroke-width="2"/>
+    <text class="axis" x="${f.L}" y="${f.H - 6}">${local(t0).hm}</text><text class="axis" x="${f.W - f.R}" y="${f.H - 6}" text-anchor="end">${local(last.t).hm}</text></svg>`;
+}
+/* Appliance tester: the level with it off, then the level with it on. The difference is the appliance. */
+function stepTest() {
+  const L = state.live, T = L.test;
+  if (!T) return;
+  const since = t => L.rows.filter(r => r.t >= t).map(r => r.w);
+  if (T.stage === "baseline") { const v = since(T.started); if (v.length >= 3) { T.base = median(v); T.stage = "switch"; drawTest(); } }
+  else if (T.stage === "measuring") { const v = since(T.tapped + 20000); if (v.length >= 3) { T.watts = Math.round(median(v) - T.base); T.stage = "result"; drawTest(); } }
+}
+function drawTest() {
+  const T = state.live.test, d = state.data, msg = $("test-msg"), act = $("test-actions");
+  const perHour = w => d.twoRate && d.dayRate != null ? `${(w / 1000 * d.dayRate).toFixed(1)}p an hour by day, ${(w / 1000 * d.nightRate).toFixed(1)}p at night` : d.rateNow() != null ? `${(w / 1000 * d.rateNow()).toFixed(1)}p an hour` : "";
+  const cancel = label => `<button class="btn sm" data-test="cancel" type="button">${label}</button>`;
+  if (!T) { msg.textContent = "Find out what one thing costs to run: switch it on while this watches the meter."; act.innerHTML = `<button class="btn primary" data-test="start" type="button">Start</button>`; }
+  else if (T.stage === "baseline") { msg.innerHTML = `<span class="spinner"></span>Leave it switched off. Reading what the house uses without it, about 30 seconds…`; act.innerHTML = cancel("Cancel"); }
+  else if (T.stage === "switch") { msg.textContent = `Without it the house is using ${watts(T.base)}. Switch the appliance on now, then tap the button.`; act.innerHTML = `<button class="btn primary" data-test="on" type="button">It's on</button>` + cancel("Cancel"); }
+  else if (T.stage === "measuring") { msg.innerHTML = `<span class="spinner"></span>Measuring with it on. Leave everything else as it is, about a minute…`; act.innerHTML = cancel("Cancel"); }
+  else if (T.watts < 30) { msg.textContent = "No clear change on the meter. Either it draws very little or something else switched at the same time. Try again."; act.innerHTML = cancel("Done"); }
+  else { msg.textContent = `It draws about ${watts(T.watts)}: ${perHour(T.watts)}. Name it to keep it.`; act.innerHTML = `<input type="text" id="test-name" placeholder="Tumble dryer" style="width:150px" aria-label="Appliance name"><button class="btn primary" data-test="save" type="button">Save</button>` + cancel("Discard"); }
+  const apps = loadApps().sort((a, b) => b.w - a.w);
+  $("appliances").innerHTML = apps.length ? `<thead><tr><th>Measured appliances</th><th class="r">Draws</th><th class="r">Cost to run</th><th></th></tr></thead><tbody>` +
+    apps.map(a => `<tr><td>${esc(a.name)}</td><td class="r num">${watts(a.w)}</td><td class="r num">${esc(perHour(a.w))}</td><td class="r"><button class="btn link sm" data-test="del" data-name="${esc(a.name)}" type="button">Remove</button></td></tr>`).join("") + "</tbody>" : "";
+}
+function loadApps() { try { return JSON.parse(localStorage.getItem(STORE_APPS) || "[]"); } catch (_) { return state.live.apps || []; } }
+function saveApps(a) { state.live.apps = a; try { localStorage.setItem(STORE_APPS, JSON.stringify(a)); } catch (_) {} }
+$("live").addEventListener("click", e => {
+  const b = e.target.closest("button[data-test]"); if (!b) return;
+  const L = state.live, act = b.dataset.test;
+  if (act === "start") L.test = { stage: "baseline", started: Date.now() };
+  else if (act === "cancel") L.test = null;
+  else if (act === "on") { L.test.stage = "measuring"; L.test.tapped = Date.now(); }
+  else if (act === "save") { const name = $("test-name").value.trim() || "Unnamed appliance"; saveApps([...loadApps().filter(a => a.name !== name), { name, w: L.test.watts }]); L.test = null; }
+  else if (act === "del") saveApps(loadApps().filter(a => a.name !== b.dataset.name));
+  drawTest();
+});
+function startLive() {
+  clearInterval(state.live.timer); state.live.rows = []; state.live.test = null; state.live.error = null;
+  $("live").hidden = !state.data.deviceId;
+  if (!state.data.deviceId) return;
+  drawTest(); renderLive(); pollLive(); state.live.timer = setInterval(pollLive, 10000);
+}
 
 /* ---------- Tooltip ---------- */
 const tip = $("tip");
-function showTip(html, x, y) {
-  tip.innerHTML = html; tip.hidden = false;
-  const r = tip.getBoundingClientRect();
-  tip.style.left = Math.max(8, Math.min(window.innerWidth - r.width - 8, x - r.width / 2)) + "px";
-  tip.style.top = (y - r.height - 12 < 8 ? y + 18 : y - r.height - 12) + "px";
-}
 function tipFor(el) {
-  if (el.dataset.c != null && el.classList.contains("cell")) {
-    const r = state.rows[+el.dataset.d], c = r.day.cells[+el.dataset.c];
-    return `<b>${esc(r.day.label)}, ${c.hm}–${local(c.t + SLOT).hm}</b><br>` +
-      (c.cost != null ? `Cost ${c.cost.toFixed(1)}p<br>Used ${c.kwh.toFixed(2)} kWh<br>` : "No reading yet<br>") + (c.rate != null ? `Price ${c.rate.toFixed(2)}p/kWh` : "");
-  }
-  if (el.dataset.b != null) {
-    const r = state.rows[+el.dataset.b];
-    return `<b>${esc(r.day.label)}</b><br>${esc(r.cost.label)}<br>${gbp(r.cost.p)} · ${r.cost.kwh.toFixed(2)} kWh<br>Day total ${gbp(r.total)}`;
-  }
-  return null;
+  if (el.dataset.tip) return el.dataset.tip;
+  if (el.dataset.c == null) return null;
+  const r = state.A.rows[+el.dataset.d], c = r.day.cells[+el.dataset.c];
+  return `<b>${esc(r.day.label)}, ${c.hm}–${local(c.t + SLOT).hm}</b><br>` + (c.cost != null ? `Cost ${c.cost.toFixed(1)}p<br>` : "") + (c.kwh != null ? `Used ${c.kwh.toFixed(2)} kWh${c.car > 0 ? `, car about ${c.car.toFixed(2)}` : ""}<br>` : "No reading yet<br>")
+    + (c.rate != null ? `Price ${c.rate.toFixed(2)}p/kWh${c.smart ? ", smart charge" : ""}` : "");
 }
 function onPoint(e) {
-  const el = e.target.closest ? e.target.closest("[data-c],[data-b]") : null, html = el && tipFor(el);
+  const el = e.target.closest ? e.target.closest("[data-c],[data-tip]") : null, html = el && tipFor(el);
   if (!html) { tip.hidden = true; return; }
-  const b = el.getBoundingClientRect();
-  showTip(html, e.clientX || b.left + b.width / 2, e.type === "focusin" || !e.clientY ? b.top : e.clientY);
+  tip.innerHTML = html; tip.hidden = false;
+  const b = el.getBoundingClientRect(), r = tip.getBoundingClientRect(), x = e.clientX || b.left + b.width / 2, y = e.type === "focusin" || !e.clientY ? b.top : e.clientY;
+  tip.style.left = Math.max(8, Math.min(window.innerWidth - r.width - 8, x - r.width / 2)) + "px";
+  tip.style.top = (y - r.height - 12 < 8 ? y + 18 : y - r.height - 12) + "px";
 }
 for (const ev of ["pointermove", "click", "focusin"]) document.addEventListener(ev, onPoint);
 document.addEventListener("scroll", () => { tip.hidden = true; }, true);
@@ -553,23 +883,22 @@ function segs() {
     for (const b of $(id).children) b.setAttribute("aria-pressed", String(b.dataset.v == state[key]));
 }
 function show(view) {
-  $("setup").hidden = view !== "setup";
-  $("loading").hidden = view !== "loading";
-  $("dash").hidden = view !== "dash";
-  $("account-actions").hidden = view !== "dash";
+  $("setup").hidden = view !== "setup"; $("loading").hidden = view !== "loading";
+  $("dash").hidden = view !== "dash"; $("account-actions").hidden = view !== "dash";
 }
 function showDiag(open) {
   $("diag").hidden = !state.log.length; $("diag").open = !!open;
   $("diag-list").innerHTML = state.log.map(l => `<li>${esc(l)}</li>`).join("");
 }
 async function load() {
-  $("load-error").hidden = true; $("setup-error").hidden = true; state.log = []; showDiag(false);
-  $("loading-text").textContent = state.sample ? "Building sample data…" : "Fetching your readings from Octopus…";
+  $("setup-error").hidden = true; state.log = []; state.token = null; showDiag(false); clearInterval(state.live.timer);
+  const progress = t => { $("loading-text").textContent = t; };
+  progress(state.sample ? "Building sample data…" : "Connecting to Octopus…");
   show("loading");
   try {
-    state.data = state.sample ? loadSample(state.days) : await loadLive(state.creds, state.days);
-    segs(); show("dash"); render();
-    showDiag(!state.sample && !state.rows.some(r => r.cost));
+    state.data = state.sample ? loadSample() : await loadLive(state.creds, progress);
+    segs(); show("dash"); render(); startLive();
+    showDiag(!state.sample && !state.A.worst);
   } catch (e) {
     show("setup"); showDiag(true);
     $("setup-error").textContent = e.message || "Something went wrong."; $("setup-error").hidden = false;
@@ -577,7 +906,7 @@ async function load() {
 }
 $("setup-form").addEventListener("submit", e => {
   e.preventDefault();
-  let account = $("account").value.replace(/\s+/g, "").replace(/[\u2010-\u2015]/g, "-").toUpperCase();
+  let account = $("account").value.replace(/\s+/g, "").replace(/[‐-―]/g, "-").toUpperCase();
   if (/^[0-9A-Z]{8}$/.test(account)) account = "A-" + account;
   state.creds = { account, key: $("apikey").value.replace(/\s+/g, "") };
   state.sample = false;
@@ -588,13 +917,16 @@ $("sample").addEventListener("click", () => { state.sample = true; load(); });
 $("refresh").addEventListener("click", load);
 $("signout").addEventListener("click", () => {
   try { localStorage.removeItem(STORE); } catch (_) {}
-  state.creds = null; state.sample = false; state.data = null; state.log = []; showDiag(false); $("apikey").value = "";
-  $("subtitle").textContent = "Your most expensive time of day, every day."; show("setup");
+  clearInterval(state.live.timer);
+  state.creds = null; state.sample = false; state.data = null; state.token = null; state.log = []; showDiag(false); $("apikey").value = "";
+  $("subtitle").textContent = "What your energy bill is made of, and when it happens."; show("setup");
 });
-$("seg-days").addEventListener("click", e => { const v = e.target.dataset.v; if (v && +v !== state.days) { state.days = +v; load(); } });
+$("seg-days").addEventListener("click", e => { const v = e.target.dataset.v; if (v) { state.days = +v; segs(); render(); } });
 $("seg-win").addEventListener("click", e => { const v = e.target.dataset.v; if (v) { state.win = +v; segs(); render(); } });
-$("seg-metric").addEventListener("click", e => { const v = e.target.dataset.v; if (v) { state.metric = v; segs(); render(); } });
-let rz; window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { if (state.data && !$("dash").hidden) render(); }, 150); });
+$("seg-metric").addEventListener("click", e => { const v = e.target.dataset.v; if (v) { state.metric = v; segs(); renderHeat(state.A.rows); } });
+let rz, lastW = window.innerWidth;
+window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { if (state.data && !$("dash").hidden && window.innerWidth !== lastW) { lastW = window.innerWidth; render(); renderLive(); } }, 150); });
+document.addEventListener("visibilitychange", () => { if (!document.hidden) pollLive(); });
 
 segs();
 try { const saved = JSON.parse(localStorage.getItem(STORE) || "null"); if (saved && saved.key && saved.account) { state.creds = saved; $("account").value = saved.account; } } catch (_) {}
