@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Octopus Peaks</title>
+<style>
+/* Layout idea: summary tiles first, then one heatmap (days down, time of day across) that carries the page,
+   then a per-day bar strip and the full table. Blue is data; everything else is neutral ink. */
+:root {
+  color-scheme: light;
+  --bg: #f4f6f9;
+  --surface: #ffffff;
+  --surface-2: #eceff4;
+  --line: #dde2ea;
+  --text: #17191d;
+  --text-2: #5d6470;
+  --accent: #257de0;
+  --accent-ink: #1757ac;
+  --heat-lo: #e3effd;
+  --heat-hi: #0e3d7e;
+  --peak-ring: #17191d;
+  --serious: #c2410c;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #111418; --surface: #191c21; --surface-2: #23272e; --line: #2e333c;
+    --text: #eef0f3; --text-2: #9aa2ae; --accent: #338ced; --accent-ink: #84b9f3;
+    --heat-lo: #1b2a3d; --heat-hi: #9dc8f7; --peak-ring: #ffffff; --serious: #fb923c;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #111418; --surface: #191c21; --surface-2: #23272e; --line: #2e333c;
+  --text: #eef0f3; --text-2: #9aa2ae; --accent: #338ced; --accent-ink: #84b9f3;
+  --heat-lo: #1b2a3d; --heat-hi: #9dc8f7; --peak-ring: #ffffff; --serious: #fb923c;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--text); font: 15px/1.45 var(--font); -webkit-text-size-adjust: 100%; }
+.wrap { max-width: 1040px; margin: 0 auto; padding: 20px 16px 48px; display: flex; flex-direction: column; gap: 16px; }
+h1 { font-size: 22px; line-height: 1.2; margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+h2 { font-size: 15px; margin: 0; }
+p { margin: 0; }
+.muted { color: var(--text-2); }
+.small { font-size: 13px; }
+.num { font-variant-numeric: tabular-nums; }
+a { color: var(--accent-ink); }
+[hidden] { display: none !important; }
+
+header.top { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: flex-end; justify-content: space-between; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+.card-head { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+
+/* controls */
+.controls { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
+.ctl { display: flex; align-items: center; gap: 8px; }
+.ctl > span { font-size: 13px; color: var(--text-2); }
+.seg { display: inline-flex; background: var(--surface-2); border-radius: 8px; padding: 2px; }
+.seg button { border: 0; background: transparent; color: var(--text-2); font: inherit; font-size: 13px; padding: 5px 10px; border-radius: 6px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--text); box-shadow: 0 0 0 1px var(--line); font-weight: 600; }
+button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn { border: 1px solid var(--line); background: var(--surface); color: var(--text); font: inherit; font-size: 14px; padding: 8px 14px; border-radius: 8px; cursor: pointer; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+.btn.link { border: 0; background: none; padding: 4px 0; color: var(--accent-ink); text-decoration: underline; }
+.btn:disabled { opacity: .6; cursor: progress; }
+.badge { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 99px; background: var(--surface-2); color: var(--text-2); border: 1px solid var(--line); }
+
+/* setup */
+form.setup { display: grid; gap: 12px; max-width: 460px; }
+label.field { display: grid; gap: 4px; font-size: 13px; color: var(--text-2); }
+input[type="text"], input[type="password"] { font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; width: 100%; }
+.check { display: flex; gap: 8px; align-items: center; font-size: 13px; }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.error { color: var(--serious); font-size: 14px; }
+.error::before { content: "\26A0\FE0E  "; }
+
+/* tiles */
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.tile .k { font-size: 12px; color: var(--text-2); }
+.tile .v { font-size: 24px; font-weight: 650; letter-spacing: -0.02em; line-height: 1.15; }
+.tile .s { font-size: 13px; color: var(--text-2); }
+@media (max-width: 760px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } .tile .v { font-size: 20px; } }
+
+/* heatmap */
+.scroll { overflow-x: auto; }
+.heat { min-width: 500px; display: grid; grid-template-columns: 72px repeat(48, minmax(0, 1fr)); gap: 1px; align-items: center; }
+.heat .hr { grid-column: span 4; font-size: 11px; color: var(--text-2); padding-bottom: 4px; }
+.heat .day { font-size: 11px; color: var(--text-2); white-space: nowrap; padding-right: 6px; }
+.heat .day.we { color: var(--text); font-weight: 600; }
+.cell { height: 15px; border-radius: 2px; background: var(--surface-2); padding: 0; border: 0; cursor: pointer; }
+.cell.nodata { background: repeating-linear-gradient(135deg, var(--surface-2) 0 3px, transparent 3px 6px); cursor: default; }
+.cell.peak { box-shadow: 0 0 0 1.5px var(--peak-ring); position: relative; z-index: 1; }
+.cell:hover, .cell:focus-visible { outline: 2px solid var(--accent); outline-offset: 0; z-index: 2; position: relative; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center; margin-top: 12px; font-size: 12px; color: var(--text-2); }
+.legend .ramp { width: 110px; height: 10px; border-radius: 3px; background: linear-gradient(90deg, var(--heat-lo), var(--heat-hi)); }
+.legend .item { display: flex; align-items: center; gap: 6px; }
+.legend .sw { width: 14px; height: 12px; border-radius: 2px; }
+.legend .sw.pk { background: var(--surface-2); box-shadow: 0 0 0 1.5px var(--peak-ring); }
+.legend .sw.nd { background: repeating-linear-gradient(135deg, var(--surface-2) 0 3px, transparent 3px 6px); border: 1px solid var(--line); }
+
+/* bars */
+#bars svg { display: block; width: 100%; height: auto; }
+#bars .grid { stroke: var(--line); stroke-width: 1; }
+#bars .axis { fill: var(--text-2); font-size: 11px; font-family: var(--font); }
+#bars .bar { fill: var(--accent); }
+#bars .bar.max { fill: var(--heat-hi); }
+#bars .hit { fill: transparent; cursor: pointer; }
+#bars .hit:hover + .bar, #bars .hit:focus + .bar { opacity: .75; }
+#bars .lbl { fill: var(--text); font-size: 11px; font-weight: 600; font-family: var(--font); }
+
+/* table */
+table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 13px; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font-weight: 600; color: var(--text-2); font-size: 12px; position: sticky; top: 0; background: var(--surface); }
+td.r, th.r { text-align: right; }
+tr.worst td { background: color-mix(in oklab, var(--accent) 10%, transparent); font-weight: 600; }
+
+#tip { position: fixed; z-index: 10; pointer-events: none; background: var(--text); color: var(--bg); font-size: 12px; line-height: 1.4; padding: 7px 9px; border-radius: 6px; max-width: 220px; box-shadow: 0 4px 14px rgba(0,0,0,.25); }
+#tip b { font-weight: 650; }
+.spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; vertical-align: -2px; margin-right: 6px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <h1>Octopus Peaks</h1>
+      <p class="muted small" id="subtitle">Your most expensive time of day, every day.</p>
+    </div>
+    <div class="row" id="account-actions" hidden>
+      <span class="badge" id="sample-badge" hidden>Sample data</span>
+      <button class="btn" id="refresh" type="button">Refresh</button>
+      <button class="btn" id="signout" type="button">Change account</button>
+    </div>
+  </header>
+
+  <!-- Connect -->
+  <section class="card" id="setup">
+    <div class="card-head"><h2>Connect your Octopus account</h2></div>
+    <form class="setup" id="setup-form" autocomplete="off">
+      <label class="field">Account number
+        <input type="text" id="account" placeholder="A-1234ABCD" autocapitalize="characters" spellcheck="false" required>
+      </label>
+      <label class="field">API key
+        <input type="password" id="apikey" placeholder="sk_live_…" spellcheck="false" required>
+      </label>
+      <label class="check"><input type="checkbox" id="remember" checked> Remember on this device</label>
+      <div class="row">
+        <button class="btn primary" id="connect" type="submit">Show my peaks</button>
+        <button class="btn link" id="sample" type="button">Look at sample data first</button>
+      </div>
+      <p class="error" id="setup-error" hidden></p>
+      <p class="muted small">Find both in your Octopus dashboard under
+        <a href="https://octopus.energy/dashboard/new/accounts/personal-details/api-access" rel="noopener">Personal details → API access</a>.
+        Your key stays in this browser and is only ever sent to api.octopus.energy. This page has no server of its own.</p>
+    </form>
+  </section>
+
+  <p id="loading" hidden><span class="spinner"></span><span id="loading-text">Fetching your readings…</span></p>
+  <p class="error" id="load-error" hidden></p>
+
+  <!-- Dashboard -->
+  <div id="dash" hidden style="display:flex;flex-direction:column;gap:16px">
+    <div class="controls">
+      <div class="ctl"><span id="lbl-days">Period</span>
+        <div class="seg" id="seg-days" role="group" aria-labelledby="lbl-days">
+          <button type="button" data-v="7">7 days</button><button type="button" data-v="14">14 days</button><button type="button" data-v="30">30 days</button>
+        </div>
+      </div>
+      <div class="ctl"><span id="lbl-win">Time frame</span>
+        <div class="seg" id="seg-win" role="group" aria-labelledby="lbl-win">
+          <button type="button" data-v="1">30 min</button><button type="button" data-v="2">1 hour</button><button type="button" data-v="4">2 hours</button><button type="button" data-v="6">3 hours</button>
+        </div>
+      </div>
+    </div>
+
+    <section class="tiles" id="tiles" aria-label="Summary"></section>
+
+    <section class="card">
+      <div class="card-head">
+        <div>
+          <h2>Every half hour, every day</h2>
+          <p class="muted small" id="heat-sub"></p>
+        </div>
+        <div class="seg" id="seg-metric" role="group" aria-label="Colour by">
+          <button type="button" data-v="cost">Cost</button><button type="button" data-v="kwh">Usage</button><button type="button" data-v="rate">Price</button>
+        </div>
+      </div>
+      <div class="scroll"><div class="heat" id="heat"></div></div>
+      <div class="legend">
+        <span class="item"><span class="num" id="leg-lo"></span><span class="ramp"></span><span class="num" id="leg-hi"></span></span>
+        <span class="item"><span class="sw pk"></span>Costliest time frame that day</span>
+        <span class="item"><span class="sw nd"></span>No reading yet</span>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><div><h2 id="bars-title">Cost of each day's most expensive time frame</h2><p class="muted small">The highlighted bar is the worst of the period.</p></div></div>
+      <div id="bars"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>Day by day</h2></div>
+      <div class="scroll">
+        <table>
+          <thead><tr>
+            <th>Day</th><th>Costliest time frame</th><th class="r">Cost</th><th class="r">Used</th>
+            <th>Highest price</th><th class="r">p/kWh</th><th class="r">Day total</th>
+          </tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+      <p class="muted small" style="margin-top:10px">Costs are usage × unit rate including VAT. Standing charge is not included. Times are UK local.</p>
+    </section>
+  </div>
+</div>
+<div id="tip" hidden></div>
+
+<script>
+"use strict";
+const API = "https://api.octopus.energy/v1";
+const SLOT = 30 * 60 * 1000;
+const STORE = "octopus-peaks.creds";
+const $ = id => document.getElementById(id);
+
+const state = { days: 30, win: 1, metric: "cost", creds: null, sample: false, data: null };
+
+/* ---------- UK-local time helpers ---------- */
+const partsFmt = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+const dayFmt = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", weekday: "short", day: "numeric", month: "short" });
+function local(ms) {
+  const p = {};
+  for (const x of partsFmt.formatToParts(new Date(ms))) p[x.type] = x.value;
+  return { key: `${p.year}-${p.month}-${p.day}`, hm: `${p.hour}:${p.minute}`, idx: (+p.hour) * 2 + (+p.minute >= 30 ? 1 : 0) };
+}
+/* The last n complete UK days as [{key, label, weekend, slots:[ms...]}], oldest first. DST-safe. */
+function buildDays(n, now = Date.now()) {
+  const todayKey = local(now).key;
+  const days = [];
+  let cur = null;
+  for (let t = Math.floor(now / SLOT) * SLOT; ; t -= SLOT) {
+    const l = local(t);
+    if (l.key >= todayKey) continue;
+    if (!cur || cur.key !== l.key) {
+      if (days.length === n) break;
+      const wd = new Date(t).toLocaleDateString("en-GB", { timeZone: "Europe/London", weekday: "short" });
+      cur = { key: l.key, label: dayFmt.format(new Date(t)), weekend: wd === "Sat" || wd === "Sun", slots: [] };
+      days.push(cur);
+    }
+    cur.slots.unshift(t);
+  }
+  return days.reverse();
+}
+
+/* ---------- Octopus API ---------- */
+class ApiError extends Error { constructor(status, msg) { super(msg); this.status = status; } }
+async function get(url, key) {
+  let res;
+  try {
+    res = await fetch(url, { headers: key ? { Authorization: "Basic " + btoa(key + ":") } : {} });
+  } catch (e) {
+    throw new ApiError(0, "Could not reach Octopus. Check your connection and try again.");
+  }
+  if (!res.ok) throw new ApiError(res.status, `Octopus returned an error (${res.status}).`);
+  return res.json();
+}
+async function getAll(url, key) {
+  const out = [];
+  while (url) { const page = await get(url, key); out.push(...(page.results || [])); url = page.next; }
+  return out;
+}
+const iso = ms => new Date(ms).toISOString().replace(".000", "");
+const productCode = tariff => tariff.split("-").slice(2, -1).join("-");
+
+async function loadLive(creds, nDays) {
+  const days = buildDays(nDays);
+  const from = days[0].slots[0], to = days[days.length - 1].slots.at(-1) + SLOT;
+
+  let acct;
+  try { acct = await get(`${API}/accounts/${encodeURIComponent(creds.account)}/`, creds.key); }
+  catch (e) {
+    if (e.status === 401) throw new Error("Octopus did not accept that API key. Copy it again from your dashboard.");
+    if (e.status === 403 || e.status === 404) throw new Error("That account number was not found for this API key. It looks like A-1234ABCD.");
+    throw e;
+  }
+  let meter = null;
+  for (const prop of acct.properties || []) for (const mp of prop.electricity_meter_points || []) {
+    if (mp.is_export || meter) continue;
+    const ags = (mp.agreements || []).map(a => ({ tariff: a.tariff_code, from: a.valid_from ? Date.parse(a.valid_from) : -Infinity, to: a.valid_to ? Date.parse(a.valid_to) : Infinity }))
+      .filter(a => a.from < to && a.to > from);
+    if (ags.length) meter = { mpan: mp.mpan, serials: (mp.meters || []).map(m => m.serial_number).filter(Boolean), ags };
+  }
+  if (!meter) throw new Error("No electricity import meter with an active tariff was found on this account.");
+  if (meter.ags.some(a => a.tariff.startsWith("E-2R"))) throw new Error("Your tariff is a two-register (Economy 7) tariff, which this page does not support yet.");
+
+  // Usage: try every meter serial and keep the one that has readings.
+  const q = `period_from=${iso(from)}&period_to=${iso(to)}&page_size=25000&order_by=period`;
+  let usage = new Map();
+  for (const serial of meter.serials) {
+    const rows = await getAll(`${API}/electricity-meter-points/${meter.mpan}/meters/${encodeURIComponent(serial)}/consumption/?${q}`, creds.key);
+    const m = new Map();
+    for (const r of rows) { const t = Date.parse(r.interval_start); if (t >= from && t < to) m.set(t, +r.consumption); }
+    if (m.size > usage.size) usage = m;
+  }
+
+  // Rates: one request per agreement, clipped to when that agreement applied.
+  const spans = [];
+  for (const a of meter.ags) {
+    const lo = Math.max(from, a.from), hi = Math.min(to, a.to);
+    let rows = await getAll(`${API}/products/${productCode(a.tariff)}/electricity-tariffs/${a.tariff}/standard-unit-rates/?period_from=${iso(lo)}&period_to=${iso(hi)}&page_size=1500`);
+    if (rows.some(r => r.payment_method === "DIRECT_DEBIT")) rows = rows.filter(r => !r.payment_method || r.payment_method === "DIRECT_DEBIT");
+    for (const r of rows) {
+      const f = Math.max(Date.parse(r.valid_from), lo), t = Math.min(r.valid_to ? Date.parse(r.valid_to) : hi, hi);
+      if (f < t) spans.push([f, t, +r.value_inc_vat]);
+    }
+  }
+  const rateAt = t => { for (const s of spans) if (t >= s[0] && t < s[1]) return s[2]; return null; };
+
+  return finish(days, t => usage.has(t) ? usage.get(t) : null, rateAt, [...new Set(meter.ags.map(a => a.tariff))].join(", "));
+}
+
+/* Sample data: an Agile-style price curve, an evening cooking peak and a few overnight car charges. */
+function loadSample(nDays) {
+  const days = buildDays(nDays);
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const usage = new Map(), rate = new Map();
+  days.forEach((d, di) => {
+    const charge = di % 3 === 1, windy = 0.75 + rnd() * 0.6, last = di === days.length - 1;
+    d.slots.forEach((t, i) => {
+      const h = local(t).idx / 2;
+      rate.set(t, +(windy * (13 + 9 * Math.exp(-((h - 8) ** 2) / 5) + 24 * Math.exp(-((h - 17.5) ** 2) / 2.2) - 5 * Math.exp(-((h - 3.5) ** 2) / 6))).toFixed(2));
+      if (last && i > 20) return;
+      let k = 0.09 + rnd() * 0.07 + 0.35 * Math.exp(-((h - 7.5) ** 2) / 1.2) + (0.5 + rnd() * 0.7) * Math.exp(-((h - 18) ** 2) / 2.5);
+      if (charge && h >= 0.5 && h < 4.5) k += 3.4 + rnd() * 0.3;
+      if (d.weekend && h >= 11 && h < 13) k += 0.9 * rnd();
+      usage.set(t, +k.toFixed(3));
+    });
+  });
+  return finish(days, t => usage.has(t) ? usage.get(t) : null, t => rate.has(t) ? rate.get(t) : null, "Sample Agile-style tariff");
+}
+
+function finish(days, usageAt, rateAt, tariff) {
+  for (const d of days) d.cells = d.slots.map(t => {
+    const l = local(t), kwh = usageAt(t), rate = rateAt(t);
+    return { t, hm: l.hm, idx: l.idx, kwh, rate, cost: kwh != null && rate != null ? kwh * rate : null };
+  });
+  return { days, tariff };
+}
+
+/* ---------- Analysis ---------- */
+function bestRun(cells, w, field, agg) {
+  let best = null;
+  for (let i = 0; i + w <= cells.length; i++) {
+    let sum = 0, ok = true;
+    for (let j = i; j < i + w; j++) { const v = cells[j][field]; if (v == null) { ok = false; break; } sum += v; }
+    if (!ok) continue;
+    const score = agg === "avg" ? sum / w : sum;
+    if (!best || score > best.score + 1e-9) best = { score, i };
+  }
+  return best;
+}
+const span = (cells, i, w) => `${cells[i].hm}–${local(cells[i + w - 1].t + SLOT).hm}`;
+function analyse(data, w) {
+  return data.days.map(d => {
+    const c = d.cells, r = { day: d, cost: null, rate: null };
+    const metered = c.filter(x => x.cost != null);
+    r.total = metered.length ? metered.reduce((s, x) => s + x.cost, 0) : null;
+    r.partial = metered.length > 0 && metered.length < c.length;
+    const bc = bestRun(c, w, "cost", "sum");
+    if (bc) r.cost = { i: bc.i, p: bc.score, label: span(c, bc.i, w), kwh: c.slice(bc.i, bc.i + w).reduce((s, x) => s + x.kwh, 0) };
+    const rated = c.filter(x => x.rate != null);
+    if (rated.length) {
+      const flat = rated.every(x => x.rate === rated[0].rate), br = bestRun(c, w, "rate", "avg");
+      if (br) r.rate = { i: br.i, p: br.score, label: flat ? "Flat rate all day" : span(c, br.i, w) };
+    }
+    return r;
+  });
+}
+
+/* ---------- Rendering ---------- */
+const gbp = p => "£" + (p / 100).toFixed(2);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const winName = w => ({ 1: "30 minutes", 2: "hour", 4: "2 hours", 6: "3 hours" }[w]);
+
+function render() {
+  const { data, win, metric } = state;
+  const rows = analyse(data, win);
+  const scored = rows.filter(r => r.cost);
+  const worst = scored.reduce((a, b) => (!a || b.cost.p > a.cost.p ? b : a), null);
+
+  $("subtitle").textContent = `${data.tariff} · ${data.days[0].label} to ${data.days.at(-1).label}`;
+  $("sample-badge").hidden = !state.sample;
+  $("refresh").hidden = state.sample;
+  $("signout").textContent = state.sample ? "Use my account" : "Change account";
+
+  // Tiles
+  const tiles = [];
+  if (worst) {
+    const tally = {};
+    for (const r of scored) tally[r.cost.label] = (tally[r.cost.label] || 0) + 1;
+    const [usual, n] = Object.entries(tally).sort((a, b) => b[1] - a[1])[0];
+    const total = rows.reduce((s, r) => s + (r.total || 0), 0), nd = rows.filter(r => r.total != null).length;
+    const share = scored.reduce((s, r) => s + r.cost.p, 0) / total;
+    tiles.push(["Worst " + winName(win), gbp(worst.cost.p), `${worst.day.label}, ${worst.cost.label} · ${worst.cost.kwh.toFixed(1)} kWh`]);
+    tiles.push(["Usual costliest time", usual, `${n} of ${scored.length} days`]);
+    tiles.push(["Spent on electricity", gbp(total), `${gbp(total / nd)} a day, before standing charge`]);
+    tiles.push(["Share spent in peak time frames", Math.round(share * 100) + "%", `${winName(win)} out of each 24`]);
+  } else {
+    tiles.push(["No smart meter readings", "—", "Octopus returned prices but no half-hourly usage for this period."]);
+  }
+  $("tiles").innerHTML = tiles.map(([k, v, s]) => `<div class="tile"><span class="k">${esc(k)}</span><span class="v num">${esc(v)}</span><span class="s">${esc(s)}</span></div>`).join("");
+
+  // Heatmap
+  const all = data.days.flatMap(d => d.cells).map(c => c[metric]).filter(v => v != null).sort((a, b) => a - b);
+  const lo = Math.min(0, all[0] ?? 0), hi = all.length ? all[Math.min(all.length - 1, Math.floor(all.length * 0.99))] : 1;
+  const unit = metric === "cost" ? v => v.toFixed(1) + "p" : metric === "kwh" ? v => v.toFixed(2) + " kWh" : v => v.toFixed(1) + "p/kWh";
+  $("leg-lo").textContent = unit(lo); $("leg-hi").textContent = unit(hi) + (all.at(-1) > hi ? "+" : "");
+  $("heat-sub").textContent = { cost: "Stronger colour means that half hour cost you more.", kwh: "Stronger colour means you used more electricity.", rate: "Stronger colour means the unit price was higher." }[metric];
+  let h = `<span></span>` + [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22].map(x => `<span class="hr num">${String(x).padStart(2, "0")}:00</span>`).join("");
+  rows.forEach((r, di) => {
+    h += `<span class="day${r.day.weekend ? " we" : ""}">${esc(r.day.label)}</span>`;
+    const byIdx = new Map();
+    r.day.cells.forEach((c, ci) => { if (!byIdx.has(c.idx)) byIdx.set(c.idx, ci); }); // clock-change days: first of a repeated slot
+    for (let x = 0; x < 48; x++) {
+      const ci = byIdx.get(x), c = ci == null ? null : r.day.cells[ci], v = c ? c[metric] : null;
+      if (v == null) { h += `<span class="cell nodata"></span>`; continue; }
+      const pct = Math.round(Math.max(0, Math.min(1, (v - lo) / (hi - lo || 1))) * 100);
+      const peak = r.cost && ci >= r.cost.i && ci < r.cost.i + win;
+      h += `<button type="button" class="cell${peak ? " peak" : ""}" data-d="${di}" data-c="${ci}" style="background:color-mix(in oklab,var(--heat-hi) ${pct}%,var(--heat-lo))" aria-label="${esc(r.day.label)} ${c.hm}"></button>`;
+    }
+  });
+  $("heat").innerHTML = h;
+
+  // Bars
+  $("bars-title").textContent = `Cost of each day's most expensive ${winName(win)}`;
+  renderBars(rows, worst);
+
+  // Table (newest first)
+  $("rows").innerHTML = rows.slice().reverse().map(r => `<tr class="${r === worst ? "worst" : ""}">
+    <td>${esc(r.day.label)}${r.partial ? " *" : ""}</td>
+    <td class="num">${r.cost ? esc(r.cost.label) : '<span class="muted">No reading yet</span>'}</td>
+    <td class="r num">${r.cost ? gbp(r.cost.p) : ""}</td>
+    <td class="r num">${r.cost ? r.cost.kwh.toFixed(2) + " kWh" : ""}</td>
+    <td class="num">${r.rate ? esc(r.rate.label) : ""}</td>
+    <td class="r num">${r.rate ? r.rate.p.toFixed(2) : ""}</td>
+    <td class="r num">${r.total != null ? gbp(r.total) : ""}</td></tr>`).join("")
+    + (rows.some(r => r.partial) ? `<tr><td colspan="7" class="muted">* Readings for part of this day have not arrived yet.</td></tr>` : "");
+
+  state.rows = rows;
+}
+
+function renderBars(rows, worst) {
+  const W = Math.max(320, $("bars").clientWidth), H = 190, L = 44, R = 8, T = 18, B = 24;
+  const max = Math.max(1, ...rows.map(r => r.cost ? r.cost.p : 0));
+  const step = niceStep(max / 3), top = Math.ceil(max / step) * step;
+  const y = v => T + (H - T - B) * (1 - v / top), bw = (W - L - R) / rows.length, gap = Math.min(4, bw * 0.25);
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Bar chart of the cost of each day's most expensive time frame. The table below has the same figures.">`;
+  for (let v = 0; v <= top + 1e-9; v += step) s += `<line class="grid" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text class="axis" x="${L - 6}" y="${y(v) + 4}" text-anchor="end">${gbp(v)}</text>`;
+  const every = Math.ceil(rows.length / Math.floor((W - L - R) / 52));
+  rows.forEach((r, i) => {
+    const x = L + i * bw;
+    if ((rows.length - 1 - i) % every === 0) s += `<text class="axis" x="${i === rows.length - 1 ? W - R : x + bw / 2}" y="${H - 6}" text-anchor="${i === rows.length - 1 ? "end" : "middle"}">${esc(r.day.label.split(" ").slice(1).join(" "))}</text>`;
+    if (!r.cost) return;
+    const by = y(r.cost.p), bh = y(0) - by, rad = Math.min(3, (bw - gap) / 2, bh);
+    s += `<rect class="hit" tabindex="0" data-b="${i}" x="${x}" y="${T}" width="${bw}" height="${H - T - B}"/>`
+       + `<path class="bar${r === worst ? " max" : ""}" d="M${x + gap / 2},${y(0)} v${-(bh - rad)} q0,${-rad} ${rad},${-rad} h${bw - gap - 2 * rad} q${rad},0 ${rad},${rad} v${bh - rad} z" pointer-events="none"/>`;
+    if (r === worst) s += `<text class="lbl" x="${Math.min(W - R - 20, Math.max(L + 20, x + bw / 2))}" y="${by - 5}" text-anchor="middle">${gbp(r.cost.p)}</text>`;
+  });
+  $("bars").innerHTML = s + "</svg>";
+}
+function niceStep(raw) { const p = 10 ** Math.floor(Math.log10(raw)); const f = raw / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * p; }
+
+/* ---------- Tooltip ---------- */
+const tip = $("tip");
+function showTip(html, x, y) {
+  tip.innerHTML = html; tip.hidden = false;
+  const r = tip.getBoundingClientRect();
+  tip.style.left = Math.max(8, Math.min(window.innerWidth - r.width - 8, x - r.width / 2)) + "px";
+  tip.style.top = (y - r.height - 12 < 8 ? y + 18 : y - r.height - 12) + "px";
+}
+function tipFor(el) {
+  if (el.dataset.c != null && el.classList.contains("cell")) {
+    const r = state.rows[+el.dataset.d], c = r.day.cells[+el.dataset.c];
+    return `<b>${esc(r.day.label)}, ${c.hm}–${local(c.t + SLOT).hm}</b><br>` +
+      (c.cost != null ? `Cost ${c.cost.toFixed(1)}p<br>Used ${c.kwh.toFixed(2)} kWh<br>` : "No reading yet<br>") + (c.rate != null ? `Price ${c.rate.toFixed(2)}p/kWh` : "");
+  }
+  if (el.dataset.b != null) {
+    const r = state.rows[+el.dataset.b];
+    return `<b>${esc(r.day.label)}</b><br>${esc(r.cost.label)}<br>${gbp(r.cost.p)} · ${r.cost.kwh.toFixed(2)} kWh<br>Day total ${gbp(r.total)}`;
+  }
+  return null;
+}
+function onPoint(e) {
+  const el = e.target.closest ? e.target.closest("[data-c],[data-b]") : null, html = el && tipFor(el);
+  if (!html) { tip.hidden = true; return; }
+  const b = el.getBoundingClientRect();
+  showTip(html, e.clientX || b.left + b.width / 2, e.type === "focusin" || !e.clientY ? b.top : e.clientY);
+}
+for (const ev of ["pointermove", "click", "focusin"]) document.addEventListener(ev, onPoint);
+document.addEventListener("scroll", () => { tip.hidden = true; }, true);
+
+/* ---------- Wiring ---------- */
+function segs() {
+  for (const [id, key] of [["seg-days", "days"], ["seg-win", "win"], ["seg-metric", "metric"]])
+    for (const b of $(id).children) b.setAttribute("aria-pressed", String(b.dataset.v == state[key]));
+}
+function show(view) {
+  $("setup").hidden = view !== "setup";
+  $("loading").hidden = view !== "loading";
+  $("dash").hidden = view !== "dash";
+  $("account-actions").hidden = view !== "dash";
+}
+async function load() {
+  $("load-error").hidden = true; $("setup-error").hidden = true;
+  $("loading-text").textContent = state.sample ? "Building sample data…" : "Fetching your readings from Octopus…";
+  show("loading");
+  try {
+    state.data = state.sample ? loadSample(state.days) : await loadLive(state.creds, state.days);
+    segs(); show("dash"); render();
+  } catch (e) {
+    show("setup");
+    $("setup-error").textContent = e.message || "Something went wrong."; $("setup-error").hidden = false;
+  }
+}
+$("setup-form").addEventListener("submit", e => {
+  e.preventDefault();
+  state.creds = { account: $("account").value.trim().toUpperCase(), key: $("apikey").value.trim() };
+  state.sample = false;
+  try { $("remember").checked ? localStorage.setItem(STORE, JSON.stringify(state.creds)) : localStorage.removeItem(STORE); } catch (_) {}
+  load();
+});
+$("sample").addEventListener("click", () => { state.sample = true; load(); });
+$("refresh").addEventListener("click", load);
+$("signout").addEventListener("click", () => {
+  try { localStorage.removeItem(STORE); } catch (_) {}
+  state.creds = null; state.sample = false; state.data = null; $("apikey").value = "";
+  $("subtitle").textContent = "Your most expensive time of day, every day."; show("setup");
+});
+$("seg-days").addEventListener("click", e => { const v = e.target.dataset.v; if (v && +v !== state.days) { state.days = +v; load(); } });
+$("seg-win").addEventListener("click", e => { const v = e.target.dataset.v; if (v) { state.win = +v; segs(); render(); } });
+$("seg-metric").addEventListener("click", e => { const v = e.target.dataset.v; if (v) { state.metric = v; segs(); render(); } });
+let rz; window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { if (state.data && !$("dash").hidden) render(); }, 150); });
+
+segs();
+try { const saved = JSON.parse(localStorage.getItem(STORE) || "null"); if (saved && saved.key && saved.account) { state.creds = saved; $("account").value = saved.account; } } catch (_) {}
+if (location.hash === "#sample") { state.sample = true; load(); }
+else if (state.creds) load();
+else show("setup");
+</script>
+</body>
+</html>
