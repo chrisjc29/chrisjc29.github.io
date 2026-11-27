@@ -203,7 +203,8 @@ svg .band { fill: color-mix(in oklab, var(--c-base) 12%, transparent); }
       <div id="apps-body" hidden>
         <div class="split-bar" id="apps-bar"></div>
         <div class="scroll" style="margin-top:12px"><table id="apps-table" style="min-width:560px"></table></div>
-        <p class="small muted" style="margin-top:10px">Names are best guesses from how much power each thing draws and how long it runs. Use Rename to correct one and it will be remembered on this device. Anything you measure under Right now is matched by its wattage automatically.</p>
+        <p class="small muted" style="margin-top:10px">Names are best guesses from how much power each thing draws and how long it runs. Use Rename to correct one and it will be <span id="names-where">remembered on this device</span>. Anything you measure under Right now is matched by its wattage automatically.</p>
+        <p class="error" id="names-error" hidden>That name could not be saved to the shared list. Check your connection and try again.</p>
       </div>
     </section>
 
@@ -871,8 +872,19 @@ function detectAppliances(rows, opts = {}) {
   return { baseW, totalKwh: totalWs / 3.6e6, spanMs: span, groups: out, events };
 }
 const STORE_LABELS = "octopus-peaks.labels";
-function loadLabels() { try { return JSON.parse(localStorage.getItem(STORE_LABELS) || "[]"); } catch (_) { return state.labels || []; } }
-function saveLabels(a) { state.labels = a; try { localStorage.setItem(STORE_LABELS, JSON.stringify(a)); } catch (_) {} }
+/* Names live with the backend when there is one, so every device in the household sees them; otherwise in this browser. */
+async function loadShared() {
+  state.shared = null;
+  if (!state.backend) return;
+  try { const res = await fetch(BACKEND + "?names=1", { redirect: "manual" }); if (res.ok) { const j = await res.json(); state.shared = { labels: j.labels || [], appliances: j.appliances || [] }; } } catch (_) {}
+}
+async function pushShared() {
+  let ok = false;
+  try { ok = (await fetch(BACKEND + "?names=1", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(state.shared), redirect: "manual" })).ok; } catch (_) {}
+  $("names-error").hidden = ok;
+}
+function loadLabels() { if (state.shared) return state.shared.labels; try { return JSON.parse(localStorage.getItem(STORE_LABELS) || "[]"); } catch (_) { return state.labels || []; } }
+function saveLabels(a) { if (state.shared) { state.shared.labels = a; pushShared(); return; } state.labels = a; try { localStorage.setItem(STORE_LABELS, JSON.stringify(a)); } catch (_) {} }
 const near = (list, w, tol) => list.filter(x => Math.abs(x.w - w) / w <= tol).sort((a, b) => Math.abs(a.w - w) - Math.abs(b.w - w))[0];
 
 function sampleWeek() {
@@ -958,6 +970,7 @@ function analyseApps(rows) {
 }
 function renderApps() {
   const A = state.apps; $("apps-body").hidden = !A;
+  $("names-where").textContent = state.shared ? "shared with everyone who uses this site" : "remembered on this device";
   if (!A) return;
   const colours = ["--c-house", "--c-car", "--c-base", "--c-gas", "--c-weekend"], pct = v => Math.round(v / (A.total.cost || 1) * 100) + "%";
   const shown = A.groups.filter(g => g.cost / A.total.cost >= 0.015).slice(0, 8), rest = A.groups.filter(g => !shown.includes(g));
@@ -1054,8 +1067,8 @@ function drawTest() {
     apps.map(a => `<tr><td>${esc(a.name)}</td><td class="r num">${watts(a.w)}</td><td class="r num">${esc(perHour(a.w))}</td><td class="r"><button class="btn link sm" data-test="del" data-name="${esc(a.name)}" type="button">Remove</button></td></tr>`).join("") + "</tbody>" : "";
 }
 const saveW = name => (loadApps().find(a => a.name === name) || {}).w || 0;
-function loadApps() { try { return JSON.parse(localStorage.getItem(STORE_APPS) || "[]"); } catch (_) { return state.live.apps || []; } }
-function saveApps(a) { state.live.apps = a; try { localStorage.setItem(STORE_APPS, JSON.stringify(a)); } catch (_) {} }
+function loadApps() { if (state.shared) return state.shared.appliances; try { return JSON.parse(localStorage.getItem(STORE_APPS) || "[]"); } catch (_) { return state.live.apps || []; } }
+function saveApps(a) { if (state.shared) { state.shared.appliances = a; pushShared(); return; } state.live.apps = a; try { localStorage.setItem(STORE_APPS, JSON.stringify(a)); } catch (_) {} }
 $("live").addEventListener("click", e => {
   const b = e.target.closest("button[data-test]"); if (!b) return;
   const L = state.live, act = b.dataset.test;
@@ -1112,6 +1125,7 @@ async function load() {
   progress(state.sample ? "Building sample data…" : "Connecting to Octopus…");
   show("loading");
   try {
+    await loadShared();
     state.data = state.sample ? loadSample() : await loadLive(state.creds, progress);
     state.apps = null; segs(); show("dash"); render(); startLive(); loadWeek();
     showDiag(!state.sample && !state.A.worst);

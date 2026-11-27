@@ -31,6 +31,8 @@ Cloudflare's dashboard changes often, so treat the menu names as a guide.
    | `OCTOPUS_API_KEY` | Secret | a freshly generated `sk_live_…` key |
    | `ALLOWED_EMAILS` | Text, optional | the same two emails, comma separated, as a second check |
 
+   The first deploy also creates a small key-value store (`STORE`) by itself. It holds the appliance names you type in,
+   so they are the same on every device.
 5. **Open the `workers.dev` address.** You should get the Cloudflare sign-in, then the dashboard with no login form.
 
 ## If something is wrong

@@ -13,6 +13,9 @@
  *   TEAM_DOMAIN       text     https://<team>.cloudflareaccess.com   (shown when you enable Access)
  *   POLICY_AUD        text     the Access application's AUD tag       (shown when you enable Access)
  *   ALLOWED_EMAILS    text     optional, comma separated; a second check on top of the Access policy
+ *
+ * Binding (created automatically on first deploy, see wrangler.jsonc):
+ *   STORE             KV       holds the appliance names the household has typed in, so every device sees them
  */
 const OCTOPUS = "https://api.octopus.energy";
 const json = (body, status = 200) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" } });
@@ -71,6 +74,21 @@ async function proxy(request, env, url) {
   try { await verifyAccess(request, env); } catch (e) { return deny(e.message); }
 
   if (request.method === "GET" && url.searchParams.has("config")) return json({ ok: true, account: env.OCTOPUS_ACCOUNT });
+
+  // Shared appliance names: one small document, read and replaced whole.
+  if (url.searchParams.has("names")) {
+    if (!env.STORE) return deny("No STORE binding on this Worker, so names cannot be shared.", 501);
+    if (request.method === "GET") return json((await env.STORE.get("names", "json")) || { labels: [], appliances: [] });
+    if (request.method !== "POST") return deny("Method not allowed.", 405);
+    let body;
+    try { body = await request.json(); } catch (_) { return deny("Body must be JSON.", 400); }
+    const clean = list => Array.isArray(list) && list.length <= 100 && list.every(x => x && typeof x.name === "string" && x.name.length >= 1 && x.name.length <= 60 && Number.isFinite(x.w) && x.w > 0 && x.w < 30000)
+      ? list.map(x => ({ w: Math.round(x.w), name: x.name.trim() })) : null;
+    const doc = { labels: clean(body?.labels), appliances: clean(body?.appliances) };
+    if (!doc.labels || !doc.appliances) return deny("Names must be lists of { w, name }.", 400);
+    await env.STORE.put("names", JSON.stringify(doc));
+    return json(doc);
+  }
 
   if (request.method === "GET") {
     // Read-only REST: only paths under /v1/, nothing that climbs out of it.

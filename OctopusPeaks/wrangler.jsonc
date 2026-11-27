@@ -4,6 +4,8 @@
   "main": "worker/index.js",
   "compatibility_date": "2026-06-01",
   "assets": { "directory": "./", "binding": "ASSETS" },
+  // Shared appliance names. No id on purpose: wrangler creates the namespace on the first deploy and keeps it linked.
+  "kv_namespaces": [{ "binding": "STORE" }],
   // Keep the public workers.dev address, but do not publish per-commit preview addresses.
   "workers_dev": true,
   "preview_urls": false
