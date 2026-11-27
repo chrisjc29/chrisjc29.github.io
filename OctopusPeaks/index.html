@@ -197,6 +197,16 @@ svg .band { fill: color-mix(in oklab, var(--c-base) 12%, transparent); }
       <p class="small muted" id="note" style="margin-top:10px" hidden></p>
     </section>
 
+    <section class="card" id="apps-card" hidden>
+      <div class="card-head"><div><h2>What is using it</h2><p class="muted small" id="apps-sub">Worked out from your Home Mini's 10-second readings over the last 7 days.</p></div></div>
+      <p class="small" id="apps-status"></p>
+      <div id="apps-body" hidden>
+        <div class="split-bar" id="apps-bar"></div>
+        <div class="scroll" style="margin-top:12px"><table id="apps-table" style="min-width:560px"></table></div>
+        <p class="small muted" style="margin-top:10px">Names are best guesses from how much power each thing draws and how long it runs. Use Rename to correct one and it will be remembered on this device. Anything you measure under Right now is matched by its wattage automatically.</p>
+      </div>
+    </section>
+
     <section class="card" id="live" hidden>
       <div class="card-head">
         <div><h2>Right now</h2><p class="muted small"><span class="dot" id="live-dot"></span><span id="live-status">Waiting for your Home Mini…</span></p></div>
@@ -599,7 +609,9 @@ function analyse(data, nDays, w) {
   });
   const full = rows.filter(r => r.day.cost != null && !r.partial);
   // Always-on: the level the house sits at in its quietest half hours, typical across the period.
-  const base = median(full.map(r => { const h = r.day.cells.map(c => c.house).filter(v => v != null).sort((a, b) => a - b); return h[Math.floor(h.length * 0.1)]; }));
+  // Half-hourly data overstates this when something cycles on a thermostat, so the Home Mini's figure wins when we have it.
+  let base = median(full.map(r => { const h = r.day.cells.map(c => c.house).filter(v => v != null).sort((a, b) => a - b); return h[Math.floor(h.length * 0.1)]; }));
+  if (state.apps) base = Math.min(base, state.apps.baseW / 2000);
   const S = { car: 0, carKwh: 0, base: 0, baseKwh: 0, rest: 0, restKwh: 0, gas: 0, gasKwh: 0, stand: 0, dayKwh: 0, dayCost: 0, nightKwh: 0, nightCost: 0, heavy: [] };
   for (const r of rows) {
     S.stand += r.day.standE + r.day.standG; S.gas += r.day.gasCost || 0; S.gasKwh += r.day.gasKwh || 0;
@@ -647,7 +659,7 @@ function render() {
   const parts = [
     ["--c-house", "Rest of the house", S.rest, S.restKwh, "Everything you switch on: cooking, washing, showers, lights, screens."],
     ["--c-car", "Car charging", S.car, S.carKwh, data.charger ? `From ${data.charger.name} sessions.` : ""],
-    ["--c-base", "Always on", S.base, S.baseKwh, `The ${baseW} W the house draws when nobody is doing anything: fridge, freezer, router, standby.`],
+    ["--c-base", "Always on", S.base, S.baseKwh, `The ${baseW} W that never switches off: fridge, freezer, router, standby.`],
     ["--c-gas", "Gas", S.gas, S.gasKwh, "Heating and hot water."],
     ["--c-stand", "Standing charges", S.stand, null, "Fixed daily charges for electricity" + (data.hasGas ? " and gas." : ".")],
   ].filter(p => p[2] > 0.5);
@@ -657,7 +669,7 @@ function render() {
   $("split-table").innerHTML = `<thead><tr><th>Where it goes</th><th class="r">Energy</th><th class="r">Cost</th><th class="r">Share</th></tr></thead><tbody>` +
     parts.map(p => `<tr><td>${sw(p[0])}${esc(p[1])}<span class="sub">${esc(p[4])}</span></td><td class="r num">${p[3] == null ? "" : kwh(p[3])}</td><td class="r num">${gbp(p[2])}</td><td class="r num">${pct(p[2])}</td></tr>`).join("") + "</tbody>";
 
-  renderHeat(rows); renderProfile(rows); renderRates(S); renderHeavy(S, rows.length); renderDaily(rows); renderMonthly();
+  renderApps(); renderHeat(rows); renderProfile(rows); renderRates(S); renderHeavy(S, rows.length); renderDaily(rows); renderMonthly();
 
   $("rows").innerHTML = rows.slice().reverse().map(r => { const d = r.day; return `<tr class="${r === worst ? "worst" : ""}">
     <td>${esc(d.label)}${r.partial ? " *" : ""} ${r.unusual ? '<span class="badge warn">High</span>' : ""}</td>
@@ -791,6 +803,194 @@ function renderMonthly() {
     ["--c-house", "--c-gas", "--c-stand"], gbp0, "Total energy cost for each of the last twelve months, split into electricity, gas and standing charges.");
 }
 
+/* ---------- What is using it: appliance detection from the Home Mini's history ---------- */
+/* Appliance detection from whole-house power readings (about one every 10 seconds).
+   rows: [{t: ms, w: watts}] sorted. Returns { baseW, totalKwh, groups, events }. */
+function detectAppliances(rows, opts = {}) {
+  const TH = opts.threshold || 250, n = rows.length;
+  if (n < 50) return null;
+  const med = a => { const s = a.slice().sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+  const T = rows.map(r => r.t), F = rows.map((r, i) => med([rows[Math.max(0, i - 1)].w, r.w, rows[Math.min(n - 1, i + 1)].w]));
+  // 1. Steps: where the level jumps and stays jumped.
+  const steps = [];
+  for (let i = 3; i < n - 3;) {
+    const before = med([F[i - 3], F[i - 2], F[i - 1]]), d = F[i] - before;
+    if (Math.abs(d) < TH || T[i] - T[i - 1] > 120000) { i++; continue; }
+    let j = i;
+    while (j < n - 4 && (F[j + 1] - F[j]) * d > 0 && Math.abs(F[j + 1] - F[j]) >= TH * 0.4 && T[j + 1] - T[j] < 40000) j++;
+    const after = med([F[j], F[j + 1], F[j + 2]]), step = after - before;
+    if (Math.abs(step) >= TH) steps.push({ i, j, t: T[i], step, before });
+    i = j + 2;
+  }
+  // 2. Pair each switch-off with the most recent switch-on of the same size that plausibly stayed on.
+  const open = [], events = [];
+  for (const s of steps) {
+    while (open.length && s.t - open[0].t > 6 * 3600e3) open.shift();
+    if (s.step > 0) { open.push(s); continue; }
+    let best = -1, bestErr = Infinity;
+    for (let k = open.length - 1; k >= 0; k--) {
+      const o = open[k], err = Math.abs(o.step + s.step) / o.step;
+      if (err > 0.2 && Math.abs(o.step + s.step) > 150) continue;
+      // It must have stayed on: the level in between should not sit below where it started plus half the step.
+      const w = (o.step - s.step) / 2, stride = Math.max(1, Math.floor((s.i - o.j) / 300));
+      let low = 0, cnt = 0;
+      for (let q = o.j + 1; q < s.i; q += stride) { cnt++; if (F[q] < o.before + 0.5 * w) low++; }
+      if (cnt && low / cnt > 0.1) continue;
+      if (err < bestErr) { best = k; bestErr = err; }
+      if (err < 0.06) break;
+    }
+    if (best < 0) continue;
+    const o = open.splice(best, 1)[0];
+    events.push({ t: o.t, dur: s.t - o.t, w: (o.step - s.step) / 2 });
+  }
+  events.sort((a, b) => a.t - b.t);
+  // 3. Group events of the same size: that is one appliance (or one heating element).
+  // First pull out tight clusters (one element always draws the same power), densest first; then sweep up the rest by size.
+  let rest = events.slice().sort((a, b) => a.w - b.w); const groups = [];
+  for (;;) {
+    let bestN = 0, bestI = 0;
+    for (let i = 0, j = 0; i < rest.length; i++) { while (j < rest.length && rest[j].w <= rest[i].w * 1.09) j++; if (j - i > bestN) { bestN = j - i; bestI = i; } }
+    if (bestN < 6) break;
+    const c = med(rest.slice(bestI, bestI + bestN).map(e => e.w)), take = rest.filter(e => e.w >= c * 0.93 && e.w <= c * 1.07);
+    groups.push({ ev: take }); rest = rest.filter(e => !take.includes(e));
+  }
+  for (const e of rest) {
+    const g = groups[groups.length - 1];
+    if (g && g.loose && e.w <= g.hi * 1.06 && e.w <= g.lo * 1.35) { g.ev.push(e); g.hi = e.w; } else groups.push({ loose: true, lo: e.w, hi: e.w, ev: [e] });
+  }
+  let totalWs = 0, span = 0;
+  for (let i = 1; i < n; i++) { const dt = T[i] - T[i - 1]; if (dt < 120000) { totalWs += rows[i - 1].w * dt / 1000; span += dt; } }
+  const sorted = rows.map(r => r.w).sort((a, b) => a - b), baseW = sorted[Math.floor(n * 0.05)];
+  const out = groups.map(g => {
+    const ev = g.ev.sort((a, b) => a.t - b.t), w = med(ev.map(e => e.w)), durs = ev.map(e => e.dur / 1000);
+    // Runs: bursts of the same element close together are one use (an oven or heater cycling on its thermostat).
+    const runs = []; for (const e of ev) { const r = runs[runs.length - 1]; if (r && e.t - r.end < 15 * 60e3) { r.end = e.t + e.dur; r.on += e.dur; r.n++; } else runs.push({ t: e.t, end: e.t + e.dur, on: e.dur, n: 1 }); }
+    return { w, n: ev.length, runs, onSec: durs.reduce((a, b) => a + b, 0), medDur: med(durs), kwh: ev.reduce((s, e) => s + e.w * e.dur / 3.6e9, 0), ev,
+      cycling: ev.length >= 12 && runs.length <= ev.length * 0.6 };
+  }).filter(g => g.kwh >= 0.3).sort((a, b) => b.kwh - a.kwh);
+  return { baseW, totalKwh: totalWs / 3.6e6, spanMs: span, groups: out, events };
+}
+const STORE_LABELS = "octopus-peaks.labels";
+function loadLabels() { try { return JSON.parse(localStorage.getItem(STORE_LABELS) || "[]"); } catch (_) { return state.labels || []; } }
+function saveLabels(a) { state.labels = a; try { localStorage.setItem(STORE_LABELS, JSON.stringify(a)); } catch (_) {} }
+const near = (list, w, tol) => list.filter(x => Math.abs(x.w - w) / w <= tol).sort((a, b) => Math.abs(a.w - w) - Math.abs(b.w - w))[0];
+
+function sampleWeek() {
+  const end = Math.floor(Date.now() / 10000) * 10000, rows = [], ses = state.data.sessions;
+  let seed = 5; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let t = end - 7 * DAY; t <= end; t += 10000) {
+    const h = local(t).idx / 2, m = Math.floor(t / 60000), day = Math.floor(t / DAY);
+    let w = 290 + 15 * Math.sin(t / 900000) + ((m % 47) < 14 ? 110 : 0);
+    if (m % 21 < 6) w += 1900;                                            // heater on a thermostat, round the clock
+    if ((h >= 7 && h < 7.04) || (h >= 13 && h < 13.04) || (h >= 17.5 && h < 17.54) || (h >= 20.5 && h < 20.54)) w += 3000; // kettle
+    if (h >= 18 && h < 19 && (m % 5 < 3 || h < 18.25)) w += 2150;         // oven
+    if (day % 2 === 0 && h >= 19.5 && h < 20.75) w += 2400;               // tumble dryer
+    if (ses.some(s => t > s.s + 2 * 3600e3 && t < s.e - 3 * 3600e3)) w += 7400;
+    rows.push({ t, w: w + rnd() * 20 });
+  }
+  return rows;
+}
+async function loadWeek() {
+  const d = state.data, run = state.appsRun = (state.appsRun || 0) + 1;
+  state.apps = null; $("apps-card").hidden = !d.deviceId;
+  if (!d.deviceId) return;
+  const status = t => { if (run === state.appsRun) { $("apps-status").innerHTML = t; $("apps-status").hidden = !t; } };
+  $("apps-body").hidden = true; status('<span class="spinner"></span>Reading a week of 10-second readings from your Home Mini…');
+  let rows, failed = 0;
+  if (state.sample) rows = sampleWeek();
+  else {
+    const end = Date.now(), chunks = [], m = new Map(); let next = 0, done = 0;
+    for (let t = end - 7 * DAY; t < end; t += DAY / 2) chunks.push([t, Math.min(end, t + DAY / 2)]);
+    const worker = async () => { while (next < chunks.length && run === state.appsRun) {
+      const [a, b] = chunks[next++];
+      try { const r = await gql("query($d:String!,$s:DateTime,$e:DateTime){smartMeterTelemetry(deviceId:$d,start:$s,end:$e,grouping:TEN_SECONDS){readAt demand}}", { d: d.deviceId, s: iso(a), e: iso(b) });
+        for (const x of r.smartMeterTelemetry || []) if (x.demand != null) m.set(Date.parse(x.readAt), +x.demand); } catch (_) { failed++; }
+      status(`<span class="spinner"></span>Reading a week of 10-second readings from your Home Mini… ${Math.round(++done / chunks.length * 100)}%`);
+    } };
+    await Promise.all([worker(), worker(), worker()]);
+    rows = [...m].sort((a, b) => a[0] - b[0]).map(([t, w]) => ({ t, w }));
+  }
+  if (run !== state.appsRun) return;
+  if (rows.length < 2000) { status("Not enough Home Mini history came back to work this out. It needs a few days of readings." + (failed ? " Some requests to Octopus failed; try Refresh." : "")); return; }
+  state.apps = analyseApps(rows); state.apps.partial = failed > 0;
+  status(failed ? "Some of the week could not be read, so these figures cover only part of it." : "");
+  render();
+}
+function analyseApps(rows) {
+  const d = state.data, rateCache = new Map();
+  const rateAt = t => { const k = Math.floor(t / SLOT); if (!rateCache.has(k)) rateCache.set(k, d.ePrice.unit.at(t, d.twoRate ? (isNight(local(t).idx) ? "night" : "day") : null) ?? d.rateNow() ?? 0); return rateCache.get(k); };
+  // Take the car out first, using the charger's own sessions, so it does not hide everything else.
+  let carW = 0, house = rows;
+  const ses = d.sessions.filter(s => s.e > rows[0].t - 600e3), inSes = t => ses.find(s => t > s.s - 600e3 && t < s.e + 600e3);
+  if (ses.length) {
+    const first = detectAppliances(rows), big = first && first.groups.filter(g => g.w >= 5000).sort((a, b) => b.kwh - a.kwh)[0];
+    carW = big ? big.w : (d.charger?.kw || 7) * 1000;
+    house = rows.map(r => { const s = r.w - carW >= 100 && inSes(r.t); return s ? { t: r.t, w: r.w - carW, car: carW, smart: s.smart } : r; });
+  }
+  const det = detectAppliances(house), T = { kwh: 0, cost: 0 }, car = { kwh: 0, cost: 0 }, base = { kwh: 0, cost: 0 };
+  for (let i = 1; i < house.length; i++) {
+    const a = house[i - 1], dt = house[i].t - a.t; if (dt >= 120000) continue;
+    const h = dt / 3.6e9, r = rateAt(a.t), cr = a.smart && d.nightRate != null ? d.nightRate : r;
+    T.kwh += (a.w + (a.car || 0)) * h; T.cost += a.w * h * r + (a.car || 0) * h * cr;
+    car.kwh += (a.car || 0) * h; car.cost += (a.car || 0) * h * cr;
+    base.kwh += det.baseW * h; base.cost += det.baseW * h * r;
+  }
+  const days = det.spanMs / DAY, labels = loadLabels(), measured = loadApps();
+  const groups = det.groups.map(g => {
+    const hours = {}, nights = new Set(); let cost = 0;
+    for (const e of g.ev) { const l = local(e.t), k = l.idx >> 1, c = e.w * e.dur / 3.6e9 * rateAt(e.t + e.dur / 2); cost += c; hours[k] = (hours[k] || 0) + c; if (l.idx < 10) nights.add(l.key); }
+    const top = Object.entries(hours).sort((a, b) => b[1] - a[1]).slice(0, 2).map(x => String(x[0]).padStart(2, "0") + ":00").sort();
+    const kw = g.w / 1000, m = g.medDur;
+    let guess;
+    if (kw >= 5.5) guess = m < 1200 ? "Electric shower" : "Very large load";
+    else if (kw >= 2.6 && kw < 3.4) guess = m < 300 ? "Kettle" : "Immersion heater or 3 kW heater";
+    else if (kw >= 1.2 && kw < 2.6) guess = m < 60 ? "Short bursts: hot tap, coffee machine or hob ring" : g.n >= 5 * days && nights.size >= 3 ? "Electric heater on a thermostat" : m >= 1800 ? "Tumble dryer, oven or heater" : "Oven, dishwasher or washing machine";
+    else if (kw >= 0.7) guess = m < 360 ? "Microwave, toaster or hob" : "Mid-size appliance";
+    else guess = g.cycling ? "Dehumidifier, pump or freezer" : "Small appliance";
+    const mine = near(labels, g.w, 0.08), meas = near(measured, g.w, 0.1);
+    const dur = m < 90 ? Math.round(m) + " sec" : m < 5400 ? Math.round(m / 60) + " min" : (m / 3600).toFixed(1) + " hours";
+    return { w: g.w, kwh: g.kwh, cost, onH: g.onSec / 3600, n: g.n, name: mine?.name || meas?.name || guess, named: !!(mine || meas),
+      why: `About ${kw >= 1 ? kw.toFixed(1) + " kW" : Math.round(g.w / 10) * 10 + " W"} · came on ${g.n} times, usually for ${dur} · costs most around ${top.join(" and ")}` };
+  });
+  const apps = groups.reduce((a, g) => ({ kwh: a.kwh + g.kwh, cost: a.cost + g.cost }), { kwh: 0, cost: 0 });
+  const other = { kwh: Math.max(0, T.kwh - car.kwh - base.kwh - apps.kwh), cost: Math.max(0, T.cost - car.cost - base.cost - apps.cost) };
+  return { baseW: det.baseW, days, total: T, car, base, other, groups, carW };
+}
+function renderApps() {
+  const A = state.apps; $("apps-body").hidden = !A;
+  if (!A) return;
+  const colours = ["--c-house", "--c-car", "--c-base", "--c-gas", "--c-weekend"], pct = v => Math.round(v / (A.total.cost || 1) * 100) + "%";
+  const shown = A.groups.filter(g => g.cost / A.total.cost >= 0.015).slice(0, 8), rest = A.groups.filter(g => !shown.includes(g));
+  const rows = shown.map((g, i) => ({ ...g, key: g.w, colour: colours[i] || "--c-stand" }));
+  if (A.car.kwh > 0.5) rows.push({ name: "Car charger", why: `About ${(A.carW / 1000).toFixed(1)} kW, from your charger's sessions`, kwh: A.car.kwh, cost: A.car.cost, colour: "--c-stand", fixed: true });
+  rows.push({ name: "Always on", why: `The ${Math.round(A.baseW / 10) * 10} W that never switches off: fridge, freezer, router, standby`, kwh: A.base.kwh, cost: A.base.cost, colour: "--c-stand", fixed: true });
+  const restSum = rest.reduce((a, g) => ({ kwh: a.kwh + g.kwh, cost: a.cost + g.cost }), { kwh: 0, cost: 0 });
+  rows.push({ name: "Everything else", why: "Lights, screens, cooking on several rings at once, and anything too small or too mixed up to separate", kwh: A.other.kwh + restSum.kwh, cost: A.other.cost + restSum.cost, colour: "--c-stand", fixed: true });
+  rows.sort((a, b) => b.cost - a.cost);
+  const top = rows.find(r => !r.fixed);
+  $("apps-sub").textContent = `Worked out from your Home Mini's 10-second readings over the last ${Math.round(A.days)} days: ${gbp(A.total.cost)} of electricity.` + (top ? ` The biggest single thing it can pick out is the ${top.name.toLowerCase()}: ${gbp(top.cost)}, about ${gbp0(top.cost / A.days * 30.4)} a month.` : "");
+  $("apps-bar").innerHTML = rows.map(r => `<span style="flex:${Math.max(r.cost, 0.01)};background:var(${r.colour})" data-tip="${esc(`<b>${r.name}</b><br>${gbp(r.cost)} · ${pct(r.cost)}`)}"></span>`).join("");
+  $("apps-table").innerHTML = `<thead><tr><th>What</th><th class="r">On for</th><th class="r">Energy</th><th class="r">Cost</th><th class="r">Share</th><th></th></tr></thead><tbody>` + rows.map(r =>
+    `<tr><td>${sw(r.colour)}<span data-name="${r.key || ""}">${esc(r.name)}</span>${r.fixed || r.named ? "" : ' <span class="badge">guess</span>'}<span class="sub">${esc(r.why)}</span></td>
+     <td class="r num">${r.onH != null ? (r.onH < 1 ? Math.round(r.onH * 60) + " min" : r.onH.toFixed(1) + " h") : ""}</td><td class="r num">${kwh(r.kwh)}</td><td class="r num">${gbp(r.cost)}</td><td class="r num">${pct(r.cost)}</td>
+     <td class="r">${r.fixed ? "" : `<button class="btn link sm" data-rename="${r.key}" type="button">Rename</button>`}</td></tr>`).join("") + "</tbody>";
+}
+$("apps-card").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.rename) {
+    const w = +b.dataset.rename, cell = b.closest("tr").querySelector("[data-name]");
+    cell.outerHTML = `<input type="text" id="rename-input" value="${esc(cell.textContent)}" style="width:190px;display:inline-block" aria-label="Name for this appliance">`;
+    b.outerHTML = `<button class="btn primary sm" data-save="${w}" type="button">Save</button>`;
+    $("rename-input").focus(); $("rename-input").select();
+  } else if (b.dataset.save) {
+    const w = +b.dataset.save, name = $("rename-input").value.trim(), keep = loadLabels().filter(x => Math.abs(x.w - w) / w > 0.08);
+    saveLabels(name ? [...keep, { w, name }] : keep);
+    const g = state.apps.groups.find(x => x.w === w); if (g && name) { g.name = name; g.named = true; }
+    renderApps();
+  }
+});
+$("apps-card").addEventListener("keydown", e => { if (e.key === "Enter" && e.target.id === "rename-input") { e.preventDefault(); $("apps-card").querySelector("[data-save]").click(); } });
+
 /* ---------- Live: Home Mini ---------- */
 function sampleTelemetry() {
   const now = Math.floor(Date.now() / 10000) * 10000, out = [], on = state.live.test?.tapped;
@@ -837,31 +1037,32 @@ function stepTest() {
   if (!T) return;
   const since = t => L.rows.filter(r => r.t >= t).map(r => r.w);
   if (T.stage === "baseline") { const v = since(T.started); if (v.length >= 3) { T.base = median(v); T.stage = "switch"; drawTest(); } }
-  else if (T.stage === "measuring") { const v = since(T.tapped + 20000); if (v.length >= 3) { T.watts = Math.round(median(v) - T.base); T.stage = "result"; drawTest(); } }
+  else if (T.stage === "measuring") { const v = since(T.tapped + 20000); if (v.length >= 3) { T.watts = Math.round((median(v) - T.base) * (T.off ? -1 : 1)); T.stage = "result"; drawTest(); } }
 }
 function drawTest() {
   const T = state.live.test, d = state.data, msg = $("test-msg"), act = $("test-actions");
   const perHour = w => d.twoRate && d.dayRate != null ? `${(w / 1000 * d.dayRate).toFixed(1)}p an hour by day, ${(w / 1000 * d.nightRate).toFixed(1)}p at night` : d.rateNow() != null ? `${(w / 1000 * d.rateNow()).toFixed(1)}p an hour` : "";
   const cancel = label => `<button class="btn sm" data-test="cancel" type="button">${label}</button>`;
-  if (!T) { msg.textContent = "Find out what one thing costs to run: switch it on while this watches the meter."; act.innerHTML = `<button class="btn primary" data-test="start" type="button">Start</button>`; }
-  else if (T.stage === "baseline") { msg.innerHTML = `<span class="spinner"></span>Leave it switched off. Reading what the house uses without it, about 30 seconds…`; act.innerHTML = cancel("Cancel"); }
-  else if (T.stage === "switch") { msg.textContent = `Without it the house is using ${watts(T.base)}. Switch the appliance on now, then tap the button.`; act.innerHTML = `<button class="btn primary" data-test="on" type="button">It's on</button>` + cancel("Cancel"); }
-  else if (T.stage === "measuring") { msg.innerHTML = `<span class="spinner"></span>Measuring with it on. Leave everything else as it is, about a minute…`; act.innerHTML = cancel("Cancel"); }
+  if (!T) { msg.textContent = "Find out what one thing costs to run. Switch it on while this watches the meter, or for something that is always on, switch it off (at the plug or its breaker)."; act.innerHTML = `<button class="btn primary" data-test="start" type="button">Something I can switch on</button><button class="btn" data-test="start-off" type="button">Something that's always on</button>`; }
+  else if (T.stage === "baseline") { msg.innerHTML = `<span class="spinner"></span>${T.off ? "Leave it running as normal" : "Leave it switched off"}. Reading what the house uses ${T.off ? "with" : "without"} it, about 30 seconds…`; act.innerHTML = cancel("Cancel"); }
+  else if (T.stage === "switch") { msg.textContent = T.off ? `With it running the house is using ${watts(T.base)}. Switch it off now, at the plug or its breaker, then tap the button. Do not switch off the circuit your router or Home Mini is on, or the readings stop.` : `Without it the house is using ${watts(T.base)}. Switch the appliance on now, then tap the button.`; act.innerHTML = `<button class="btn primary" data-test="on" type="button">${T.off ? "It's off" : "It's on"}</button>` + cancel("Cancel"); }
+  else if (T.stage === "measuring") { msg.innerHTML = `<span class="spinner"></span>Measuring with it ${T.off ? "off" : "on"}. Leave everything else as it is, about a minute…`; act.innerHTML = cancel("Cancel"); }
   else if (T.watts < 30) { msg.textContent = "No clear change on the meter. Either it draws very little or something else switched at the same time. Try again."; act.innerHTML = cancel("Done"); }
-  else { msg.textContent = `It draws about ${watts(T.watts)}: ${perHour(T.watts)}. Name it to keep it.`; act.innerHTML = `<input type="text" id="test-name" placeholder="Tumble dryer" style="width:150px" aria-label="Appliance name"><button class="btn primary" data-test="save" type="button">Save</button>` + cancel("Discard"); }
+  else { msg.textContent = `It draws about ${watts(T.watts)}: ${perHour(T.watts)}${T.off ? `, which is ${gbp0(T.watts / 1000 * 24 * 30.4 * (d.dayRate ?? d.rateNow() ?? 0))} a month if it runs all the time at the day rate` : ""}. Name it to keep it.`; act.innerHTML = `<input type="text" id="test-name" placeholder="Tumble dryer" style="width:150px" aria-label="Appliance name"><button class="btn primary" data-test="save" type="button">Save</button>` + cancel("Discard"); }
   const apps = loadApps().sort((a, b) => b.w - a.w);
   $("appliances").innerHTML = apps.length ? `<thead><tr><th>Measured appliances</th><th class="r">Draws</th><th class="r">Cost to run</th><th></th></tr></thead><tbody>` +
     apps.map(a => `<tr><td>${esc(a.name)}</td><td class="r num">${watts(a.w)}</td><td class="r num">${esc(perHour(a.w))}</td><td class="r"><button class="btn link sm" data-test="del" data-name="${esc(a.name)}" type="button">Remove</button></td></tr>`).join("") + "</tbody>" : "";
 }
+const saveW = name => (loadApps().find(a => a.name === name) || {}).w || 0;
 function loadApps() { try { return JSON.parse(localStorage.getItem(STORE_APPS) || "[]"); } catch (_) { return state.live.apps || []; } }
 function saveApps(a) { state.live.apps = a; try { localStorage.setItem(STORE_APPS, JSON.stringify(a)); } catch (_) {} }
 $("live").addEventListener("click", e => {
   const b = e.target.closest("button[data-test]"); if (!b) return;
   const L = state.live, act = b.dataset.test;
-  if (act === "start") L.test = { stage: "baseline", started: Date.now() };
+  if (act === "start" || act === "start-off") L.test = { stage: "baseline", started: Date.now(), off: act === "start-off" };
   else if (act === "cancel") L.test = null;
   else if (act === "on") { L.test.stage = "measuring"; L.test.tapped = Date.now(); }
-  else if (act === "save") { const name = $("test-name").value.trim() || "Unnamed appliance"; saveApps([...loadApps().filter(a => a.name !== name), { name, w: L.test.watts }]); L.test = null; }
+  else if (act === "save") { const name = $("test-name").value.trim() || "Unnamed appliance"; saveApps([...loadApps().filter(a => a.name !== name), { name, w: L.test.watts }]); L.test = null; if (state.apps) { for (const g of state.apps.groups) if (!g.named && Math.abs(g.w - saveW(name)) / g.w <= 0.1) { g.name = name; g.named = true; } renderApps(); } }
   else if (act === "del") saveApps(loadApps().filter(a => a.name !== b.dataset.name));
   drawTest();
 });
@@ -912,7 +1113,7 @@ async function load() {
   show("loading");
   try {
     state.data = state.sample ? loadSample() : await loadLive(state.creds, progress);
-    segs(); show("dash"); render(); startLive();
+    state.apps = null; segs(); show("dash"); render(); startLive(); loadWeek();
     showDiag(!state.sample && !state.A.worst);
   } catch (e) {
     show("setup"); showDiag(true); $("setup-form").hidden = state.backend; $("setup-title").textContent = state.backend ? "Could not load your energy data" : "Connect your Octopus account";
