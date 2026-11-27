@@ -1,0 +1,10 @@
+{
+  // Cloudflare Worker that serves the dashboard and the /octo proxy. See README.md in this folder.
+  "name": "octopus-peaks",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-06-01",
+  "assets": { "directory": "./", "binding": "ASSETS" },
+  // Keep the public workers.dev address, but do not publish per-commit preview addresses.
+  "workers_dev": true,
+  "preview_urls": false
+}

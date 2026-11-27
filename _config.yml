@@ -2,3 +2,8 @@
 # here. It carries the App Links / Universal Links verification files for AniNoti.
 include:
   - .well-known
+
+# OctopusPeaks is served from Cloudflare behind a sign-in instead (see OctopusPeaks/README.md),
+# so it is kept out of the public GitHub Pages site.
+exclude:
+  - OctopusPeaks

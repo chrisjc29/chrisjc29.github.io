@@ -150,7 +150,8 @@ svg .band { fill: color-mix(in oklab, var(--c-base) 12%, transparent); }
   </header>
 
   <section class="card" id="setup">
-    <div class="card-head"><h2>Connect your Octopus account</h2></div>
+    <div class="card-head"><h2 id="setup-title">Connect your Octopus account</h2></div>
+    <p class="error" id="backend-error" hidden></p>
     <form class="setup" id="setup-form" autocomplete="off">
       <label class="field">Account number
         <input type="text" id="account" placeholder="A-1234ABCD" autocapitalize="characters" spellcheck="false" required>
@@ -279,13 +280,14 @@ svg .band { fill: color-mix(in oklab, var(--c-base) 12%, transparent); }
 
 <script>
 "use strict";
-const API = "https://api.octopus.energy/v1";
+const API_ORIGIN = "https://api.octopus.energy", API = API_ORIGIN + "/v1";
+const BACKEND = "octo"; // present only when this page is served by the Cloudflare Worker in worker/index.js
 const SLOT = 30 * 60 * 1000, DAY = 48 * SLOT;
 const STORE = "octopus-peaks.creds", STORE_APPS = "octopus-peaks.appliances";
 const GAS_KWH_PER_M3 = 11.22; // 1.02264 volume correction x 39.5 MJ/m3 calorific value / 3.6
 const HEAVY_KWH = 1.5;        // 3 kW held for a full half hour
 const $ = id => document.getElementById(id);
-const state = { days: 30, win: 1, metric: "cost", creds: null, sample: false, data: null, log: [], token: null, live: { rows: [], timer: null, test: null } };
+const state = { backend: false, days: 30, win: 1, metric: "cost", creds: null, sample: false, data: null, log: [], token: null, live: { rows: [], timer: null, test: null } };
 const log = line => state.log.push(line);
 
 /* ---------- UK-local time ---------- */
@@ -318,13 +320,17 @@ function buildDays(n, now = Date.now()) {
 
 /* ---------- Octopus REST ---------- */
 class ApiError extends Error { constructor(status, msg) { super(msg); this.status = status; } }
+const EXPIRED = "Your sign-in has expired. Reload the page to sign in again.";
 async function get(url, key) {
   let res;
-  try { res = await fetch(url, { headers: key ? { Authorization: "Basic " + btoa(key + ":") } : {} }); }
-  catch (e) { throw new ApiError(0, "Could not reach Octopus. Check your connection and try again."); }
+  try {
+    res = state.backend ? await fetch(BACKEND + "?u=" + encodeURIComponent(url.slice(API_ORIGIN.length)), { redirect: "manual" })
+      : await fetch(url, { headers: key ? { Authorization: "Basic " + btoa(key + ":") } : {} });
+  } catch (e) { throw new ApiError(0, state.backend ? EXPIRED : "Could not reach Octopus. Check your connection and try again."); }
+  if (state.backend && (res.type === "opaqueredirect" || !/json/.test(res.headers.get("Content-Type") || ""))) throw new ApiError(0, EXPIRED);
   if (!res.ok) {
     let detail = "";
-    try { detail = (await res.json()).detail || ""; } catch (_) {}
+    try { const j = await res.json(); detail = j.detail || j.error || ""; } catch (_) {}
     throw new ApiError(res.status, `Octopus returned an error (${res.status}${detail ? ": " + detail : ""}).`);
   }
   return res.json();
@@ -347,6 +353,15 @@ async function gqlRaw(query, variables, token) {
   return body.data;
 }
 async function gql(query, variables) {
+  if (state.backend) {
+    let res;
+    try { res = await fetch(BACKEND, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query, variables }), redirect: "manual" }); }
+    catch (e) { throw new Error(EXPIRED); }
+    if (res.type === "opaqueredirect" || !/json/.test(res.headers.get("Content-Type") || "")) throw new Error(EXPIRED);
+    const body = await res.json();
+    if (!body.data || Object.values(body.data).every(v => v == null)) throw new Error(body.errors?.[0]?.message || body.error || "Octopus returned no data.");
+    return body.data;
+  }
   if (!state.token || Date.now() - state.token.at > 45 * 60000) {
     const r = await gqlRaw("mutation($k:String!){obtainKrakenToken(input:{APIKey:$k}){token}}", { k: state.creds.key });
     state.token = { value: r.obtainKrakenToken.token, at: Date.now() };
@@ -620,7 +635,7 @@ function render() {
   $("subtitle").textContent = `${data.tariff} · ${rows[0].day.label} to ${rows.at(-1).day.label}`;
   $("note").hidden = !data.notes.length; $("note").textContent = data.notes.join(" ");
   $("sample-badge").hidden = !state.sample; $("refresh").hidden = state.sample;
-  $("signout").textContent = state.sample ? "Use my account" : "Change account";
+  $("signout").textContent = state.sample ? "Use my account" : "Change account"; $("signout").hidden = state.backend && !state.sample;
 
   const t = [[`Energy cost, last ${rows.length} days`, gbp(S.total), `${gbp(S.total / rows.length)} a day, everything included`]];
   if (data.hasCar) t.push(["Car charging", gbp(S.car), `${kwh(S.carKwh)} · ${Math.round(S.car / (S.elec || 1) * 100)}% of electricity cost`]);
@@ -900,7 +915,8 @@ async function load() {
     segs(); show("dash"); render(); startLive();
     showDiag(!state.sample && !state.A.worst);
   } catch (e) {
-    show("setup"); showDiag(true);
+    show("setup"); showDiag(true); $("setup-form").hidden = state.backend; $("setup-title").textContent = state.backend ? "Could not load your energy data" : "Connect your Octopus account";
+    $("backend-error").hidden = !state.backend; $("backend-error").textContent = e.message || "Something went wrong.";
     $("setup-error").textContent = e.message || "Something went wrong."; $("setup-error").hidden = false;
   }
 }
@@ -916,6 +932,7 @@ $("setup-form").addEventListener("submit", e => {
 $("sample").addEventListener("click", () => { state.sample = true; load(); });
 $("refresh").addEventListener("click", load);
 $("signout").addEventListener("click", () => {
+  if (state.backend) { state.sample = false; load(); return; }
   try { localStorage.removeItem(STORE); } catch (_) {}
   clearInterval(state.live.timer);
   state.creds = null; state.sample = false; state.data = null; state.token = null; state.log = []; showDiag(false); $("apikey").value = "";
@@ -928,11 +945,29 @@ let rz, lastW = window.innerWidth;
 window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { if (state.data && !$("dash").hidden && window.innerWidth !== lastW) { lastW = window.innerWidth; render(); renderLive(); } }, 150); });
 document.addEventListener("visibilitychange", () => { if (!document.hidden) pollLive(); });
 
-segs();
-try { const saved = JSON.parse(localStorage.getItem(STORE) || "null"); if (saved && saved.key && saved.account) { state.creds = saved; $("account").value = saved.account; } } catch (_) {}
-if (location.hash === "#sample") { state.sample = true; load(); }
-else if (state.creds) load();
-else show("setup");
+async function findBackend() {
+  if (location.protocol === "file:") return;
+  try {
+    const res = await fetch(BACKEND + "?config=1", { redirect: "manual" });
+    if (!/json/.test(res.headers.get("Content-Type") || "")) return;   // plain static hosting: no backend here
+    const j = await res.json();
+    state.backend = true;
+    if (res.ok && j.account) state.creds = { account: j.account, key: null };
+    else throw new Error(j.error || "The backend is not set up yet.");
+  } catch (e) { if (state.backend) throw e; }
+}
+(async () => {
+  segs(); $("loading-text").textContent = "Loading…"; show("loading");
+  try { await findBackend(); }
+  catch (e) {
+    show("setup"); $("setup-form").hidden = true; $("setup-title").textContent = "This site is not finished being set up";
+    $("backend-error").textContent = e.message; $("backend-error").hidden = false; return;
+  }
+  if (!state.backend) try { const saved = JSON.parse(localStorage.getItem(STORE) || "null"); if (saved && saved.key && saved.account) { state.creds = saved; $("account").value = saved.account; } } catch (_) {}
+  if (location.hash === "#sample") { state.sample = true; load(); }
+  else if (state.creds) load();
+  else show("setup");
+})();
 </script>
 </body>
 </html>
